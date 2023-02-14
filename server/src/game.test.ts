@@ -25,6 +25,10 @@ describe("createGame", () => {
     expect(game).toBeDefined();
     expect(game?.id).toBe("test");
     expect(game?.players).toHaveLength(0);
+    expect(game?.round).toBe(0);
+    expect(game?.numUndercover).toBe(1);
+    expect(game?.words.undercover).toBe("undercover");
+    expect(game?.words.common).toBe("common");
   });
 });
 

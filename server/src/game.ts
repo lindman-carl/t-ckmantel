@@ -23,6 +23,12 @@ export const createGame = (id: string): void => {
     id,
     name: `game-${id}`,
     players: [],
+    round: 0,
+    numUndercover: 1,
+    words: {
+      undercover: "undercover",
+      common: "common",
+    },
   };
 
   games.set(id, game);
@@ -70,4 +76,18 @@ export const removePlayerFromGame = (
   games.set(game.id, updatedGame);
 
   log("game", `player ${playerId} removed from game ${gameId}`);
+};
+
+export const playRound = (gameId: string): void => {
+  // play a round of the game
+
+  // get game from games map
+  const game = games.get(gameId);
+  if (!game) {
+    log("game", `game ${gameId} not found`);
+    return;
+  }
+
+  // play round
+  log("game", `round played in game ${gameId}`);
 };
