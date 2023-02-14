@@ -22,7 +22,7 @@ export const createGame = (id: string): void => {
   const game: Game = {
     id,
     name: `game-${id}`,
-    players: [],
+    players: {},
     round: 0,
     numUndercover: 1,
     words: {
@@ -45,7 +45,14 @@ export const addPlayerToGame = (gameId: string, playerId: string): void => {
   }
 
   // add player to game
-  const updatedGame = { ...game, players: [...game.players, playerId] };
+  const newPlayers = {
+    ...game.players,
+    [playerId]: {
+      isUndercover: false,
+      inGame: false,
+    },
+  };
+  const updatedGame = { ...game, players: newPlayers };
 
   // update game in games map
   games.set(game.id, updatedGame);
@@ -67,9 +74,14 @@ export const removePlayerFromGame = (
   }
 
   // remove player from game
+  const newPlayers = {
+    ...game.players,
+  };
+  delete newPlayers[playerId];
+
   const updatedGame = {
     ...game,
-    players: game.players.filter((id) => id !== playerId),
+    players: newPlayers,
   };
 
   // update game in games map

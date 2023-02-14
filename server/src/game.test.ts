@@ -17,6 +17,7 @@ describe("createGame", () => {
     // create game
     createGame("test");
     const game = games.get("test");
+    if (!game) fail("game not found");
 
     // expect one game to exist
     expect(games.size).toBe(1);
@@ -24,7 +25,11 @@ describe("createGame", () => {
     // expect default values for the game
     expect(game).toBeDefined();
     expect(game?.id).toBe("test");
-    expect(game?.players).toHaveLength(0);
+
+    // players
+    const playerIds = Object.keys(game.players);
+    expect(playerIds).toHaveLength(0);
+
     expect(game?.round).toBe(0);
     expect(game?.numUndercover).toBe(1);
     expect(game?.words.undercover).toBe("undercover");
@@ -47,12 +52,12 @@ describe("addPlayerToGame", () => {
 
     // get game
     const game = games.get("test");
+    if (!game) fail("game not found");
 
     // expect one player to exist
-    expect(game?.players).toHaveLength(1);
-
-    // expect player to be added
-    expect(game?.players[0]).toBe("player0");
+    const playerIds = Object.keys(game.players);
+    expect(playerIds).toHaveLength(1);
+    expect(playerIds[0]).toBe("player0");
   });
 });
 
@@ -71,17 +76,21 @@ describe("removePlayerFromGame", () => {
 
     // get game
     let game = games.get("test");
+    if (!game) fail("game not found");
 
-    // expect one player to exist
-    expect(game?.players).toHaveLength(1);
+    // expect player to be added
+    let playerIds = Object.keys(game.players);
+    expect(playerIds).toHaveLength(1);
 
     // remove player from game
     removePlayerFromGame("test", "player0");
 
     // get game
     game = games.get("test");
+    if (!game) fail("game not found");
 
     // expect no players to exist
-    expect(game?.players).toHaveLength(0);
+    playerIds = Object.keys(game.players);
+    expect(playerIds).toHaveLength(0);
   });
 });
