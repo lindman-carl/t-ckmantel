@@ -16,6 +16,9 @@ export const logGame = (gameId: string): void => {
 };
 
 export const createGame = (id: string): void => {
+  // create a new game with id and default values
+  // and add it to the games map
+
   const game: Game = {
     id,
     name: `game-${id}`,
@@ -26,6 +29,8 @@ export const createGame = (id: string): void => {
 };
 
 export const addPlayerToGame = (gameId: string, playerId: string): void => {
+  // add player to game object by id
+
   // get game from games map
   const game = games.get(gameId);
   if (!game) {
@@ -46,6 +51,8 @@ export const removePlayerFromGame = (
   gameId: string,
   playerId: string
 ): void => {
+  // remove player from game object by id
+
   // get game from games map
   const game = games.get(gameId);
   if (!game) {
