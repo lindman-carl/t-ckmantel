@@ -6,7 +6,7 @@ export type Game = {
   };
   round: number;
   numUndercover: number;
-  startPlayer: string;
+  startPlayer: string | null;
   words: {
     undercover: string;
     common: string;
