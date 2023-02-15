@@ -1,3 +1,5 @@
+import { Game } from "./types.js";
+
 export const log = (from: string, message: string) => {
   const fromPad = `[${from}]`.padEnd(12, " ");
 
@@ -25,6 +27,17 @@ export const getRandomKeys = (keys: string[], num: number): string[] => {
   }
 
   return randomKeys;
+};
+
+export const countPlayersInGame = (game: Game): number => {
+  // count number of players in game
+  const players = Object.values(game.players);
+  const numPlayersInGame = players.reduce(
+    (acc, player) => acc + (player.inGame ? 1 : 0),
+    0
+  );
+
+  return numPlayersInGame;
 };
 
 export const wordPairs = [
