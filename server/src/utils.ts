@@ -26,3 +26,8 @@ export const getRandomKeys = (keys: string[], num: number): string[] => {
 
   return randomKeys;
 };
+
+export const wordPairs = [
+  ["aardvark", "ant"],
+  ["communist", "capitalist"],
+];
