@@ -3,6 +3,7 @@ import {
   createGame,
   addPlayerToGame,
   removePlayerFromGame,
+  setWords,
 } from "./game.js";
 
 describe("createGame", () => {
@@ -92,5 +93,28 @@ describe("removePlayerFromGame", () => {
     // expect no players to exist
     playerIds = Object.keys(game.players);
     expect(playerIds).toHaveLength(0);
+  });
+});
+
+describe("setWords", () => {
+  beforeAll(() => {
+    // clear games
+    games.clear();
+  });
+
+  it("should set words for a game", () => {
+    // create game
+    createGame("test");
+
+    // set words
+    setWords("test", "common", "undercover");
+
+    // get game
+    const game = games.get("test");
+    if (!game) fail("game not found");
+
+    // expect words to be set
+    expect(game.words.undercover).toBe("undercover");
+    expect(game.words.common).toBe("common");
   });
 });

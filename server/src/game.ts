@@ -1,5 +1,5 @@
 import { Game } from "./types.js";
-import { log } from "./utils.js";
+import { getRandomKeys, log, validateWord } from "./utils.js";
 
 export const games = new Map<string, Game>();
 
@@ -29,6 +29,7 @@ export const createGame = (id: string): void => {
       undercover: "undercover",
       common: "common",
     },
+    startPlayer: null,
   };
 
   games.set(id, game);
@@ -90,8 +91,18 @@ export const removePlayerFromGame = (
   log("game", `player ${playerId} removed from game ${gameId}`);
 };
 
-export const playRound = (gameId: string): void => {
-  // play a round of the game
+export const setWords = (
+  gameId: string,
+  commonWord: string,
+  undercoverWord: string
+): void => {
+  // set the words for the game
+
+  // validate words
+  if (!validateWord(commonWord) || !validateWord(undercoverWord)) {
+    log("game", `invalid words`);
+    return;
+  }
 
   // get game from games map
   const game = games.get(gameId);
@@ -100,6 +111,16 @@ export const playRound = (gameId: string): void => {
     return;
   }
 
-  // play round
-  log("game", `round played in game ${gameId}`);
+  // set words
+  const updatedWords = {
+    common: commonWord,
+    undercover: undercoverWord,
+  };
+  const updatedGame = {
+    ...game,
+    words: updatedWords,
+  };
+
+  // update game in games map
+  games.set(game.id, updatedGame);
 };
