@@ -2,15 +2,18 @@ export type Game = {
   id: string;
   name: string;
   players: {
-    [key: string]: {
-      isUndercover: boolean;
-      inGame: boolean;
-    };
+    [id: string]: Player;
   };
   round: number;
   numUndercover: number;
+  startPlayer: string;
   words: {
     undercover: string;
     common: string;
   };
+};
+
+export type Player = {
+  isUndercover: boolean;
+  inGame: boolean;
 };
