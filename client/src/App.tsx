@@ -39,7 +39,7 @@ const App = () => {
     });
 
     socket.on("game-update", (game) => {
-      console.log("updateing game", game);
+      console.log("updating game", game);
       setGame(game);
 
       if (game.gameStarted) {
@@ -130,11 +130,18 @@ const App = () => {
               />
               {isHost ? (
                 game.gameStarted ? (
-                  <div>Game has started</div>
+                  game.gameOver ? (
+                    <Button
+                      onClick={() => handleStartGame(game.id)}
+                      label={"Restart game"}
+                    />
+                  ) : (
+                    <div>Game has started</div>
+                  )
                 ) : (
                   <Button
                     onClick={() => handleStartGame(game.id)}
-                    label={"Start Game"}
+                    label={"Start game"}
                   />
                 )
               ) : (
