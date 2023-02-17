@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
     "test": "jest --watch",
-    "deploy": "npm run build && rm -rf dist_client && cd client/ && npm run build && cp -r dist ../dist/client && cd .. && git add . && git commit -m buildclient && git push && git push heroku main"
+    "deploy": "npm run build && rm -rf dist/client && cd client/ && npm run build && cp -r dist ../dist/client && cd .. && git add . && git commit -m buildclient && git push && git push heroku main"
   },
   "keywords": [],
   "author": "",
