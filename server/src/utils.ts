@@ -1,46 +1,36 @@
-import { Game } from "./types.js";
-
 export const log = (from: string, message: string) => {
   const fromPad = `[${from}]`.padEnd(12, " ");
 
   console.log(`${fromPad}${message}`);
 };
 
-export const validateWord = (word: string): boolean => {
-  // check if word is valid
-  if (word.length < 1) {
-    return false;
-  }
-
-  return true;
-};
-
-export const getRandomKeys = (keys: string[], num: number): string[] => {
-  // get random keys from array
-  const randomKeys = [];
-
-  for (let i = 0; i < num; i++) {
-    const randomIndex = Math.floor(Math.random() * keys.length);
-    const randomKey = keys[randomIndex];
-
-    randomKeys.push(randomKey);
-  }
-
-  return randomKeys;
-};
-
-export const countPlayersInGame = (game: Game): number => {
-  // count number of players in game
-  const players = Object.values(game.players);
-  const numPlayersInGame = players.reduce(
-    (acc, player) => acc + (player.inGame ? 1 : 0),
-    0
-  );
-
-  return numPlayersInGame;
-};
-
-export const wordPairs = [
+export const wordPairsEng = [
   ["aardvark", "ant"],
   ["communist", "capitalist"],
 ];
+
+export const wordPairs = [
+  ["myrslok", "myra"],
+  ["katt", "hund"],
+  ["kommunist", "kapitalist"],
+  ["fidel castro", "donald trump"],
+  ["kalle anka", "musse pigg"],
+  ["carpe diem", "yolo"],
+  ["kaffe", "cola-zero"],
+];
+
+export const getRandomWords = (): { common: string; undercover: string } => {
+  // get random word pair
+  const randomIndex = Math.floor(Math.random() * wordPairs.length);
+  const randomWordPair = wordPairs[randomIndex];
+
+  // randomize word order
+  const randomWordOrder = Math.random() < 0.5 ? 0 : 1;
+  const common = randomWordPair[randomWordOrder];
+  const undercover = randomWordPair[1 - randomWordOrder];
+
+  return {
+    common,
+    undercover,
+  };
+};
