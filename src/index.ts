@@ -271,7 +271,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (_, res) => {
-  res.sendFile(path.resolve(__dirname, "dist", "index.html"));
+  res.sendFile(path.resolve(__dirname, "client", "index.html"));
 });
 
 httpServer.listen(process.env.PORT, () => {
