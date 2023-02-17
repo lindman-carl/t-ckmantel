@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import * as dotenv from "dotenv";
+import path from "path";
 
 // local imports
 import { getRandomWords, log } from "./utils.js";
@@ -266,7 +267,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (_, res) => {
-  res.json({ message: "hello world" });
+  res.sendFile(path.join(__dirname, "dist_client", "index.html"));
 });
 
 httpServer.listen(process.env.PORT, () => {
