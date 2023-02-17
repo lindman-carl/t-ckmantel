@@ -79,7 +79,15 @@ io.on("connection", (socket) => {
       undercoverPlayerIds.push(playerIdsInRandomOrder[i]);
     }
 
+    // reset all players to not undercover
+    // then set undercover players to undercover
     const updatedPlayers = { ...game.players };
+    for (const playerId of playerIds) {
+      updatedPlayers[playerId] = {
+        ...updatedPlayers[playerId],
+        isUndercover: false,
+      };
+    }
     for (const playerId of undercoverPlayerIds) {
       updatedPlayers[playerId] = {
         ...updatedPlayers[playerId],
@@ -109,6 +117,8 @@ io.on("connection", (socket) => {
       0
     );
 
+    const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
+
     // update game
     const updatedGame: Game = {
       ...game,
@@ -120,6 +130,7 @@ io.on("connection", (socket) => {
       round: 0,
       expectedVotes,
       votes: {},
+      message,
     };
 
     // update games map
