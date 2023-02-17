@@ -25,22 +25,24 @@ const Menu = ({ handleJoinGame, handleCreateGame }: MenuProps) => {
           </h2>
           <input
             type="text"
-            placeholder="Game ID"
+            placeholder="game id"
             value={gameId}
             onChange={(e) => setGameId(e.target.value)}
-            className="w-96 rounded px-4 py-2 text-black shadow-inner"
+            className="rounded px-4 py-2 text-sky-900 shadow-inner"
           />
           <input
             type="text"
             placeholder="your name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="w-96 rounded px-4 py-2 text-black shadow-inner"
+            className="rounded px-4 py-2 text-sky-900 shadow-inner"
           />
-          <Button
-            onClick={() => handleJoinGame(gameId, playerName)}
-            label="Join Game"
-          />
+          <div className="mx-auto mt-4">
+            <Button
+              onClick={() => handleJoinGame(gameId, playerName)}
+              label="Join Game"
+            />
+          </div>
         </div>
       </div>
     );
@@ -79,7 +81,13 @@ const Menu = ({ handleJoinGame, handleCreateGame }: MenuProps) => {
     // Main menu
     return (
       <div className="flex flex-col items-center justify-center gap-y-4">
-        <Button onClick={() => setMenuState("join")} label="Join Game" />
+        <Button
+          onClick={() => {
+            setMenuState("join");
+            setGameId("");
+          }}
+          label="Join Game"
+        />
         <Button onClick={() => setMenuState("create")} label="Create Game" />
       </div>
     );
