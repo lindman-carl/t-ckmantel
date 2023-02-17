@@ -116,6 +116,8 @@ io.on("connection", (socket) => {
       startPlayer,
       words: randomWords,
       gameStarted: true,
+      gameOver: false,
+      round: 0,
       expectedVotes,
       votes: {},
     };
@@ -209,6 +211,16 @@ io.on("connection", (socket) => {
             ", "
           )}`;
           gameOver = true;
+
+          // give wins to commoners
+          for (const playerId of Object.keys(updatedPlayers)) {
+            if (!updatedPlayers[playerId].isUndercover) {
+              updatedPlayers[playerId] = {
+                ...updatedPlayers[playerId],
+                wins: updatedPlayers[playerId].wins + 1,
+              };
+            }
+          }
         } else if (numCommonersInGame <= numUndercoversInGame) {
           // if there are as many or fewer commoners than undercover players left, the undercover win
           const survivingUndercoverPlayerNames = Object.values(updatedPlayers)
@@ -219,6 +231,16 @@ io.on("connection", (socket) => {
             ", "
           )}`;
           gameOver = true;
+
+          // give wins to undercovers
+          for (const playerId of Object.keys(updatedPlayers)) {
+            if (updatedPlayers[playerId].isUndercover) {
+              updatedPlayers[playerId] = {
+                ...updatedPlayers[playerId],
+                wins: updatedPlayers[playerId].wins + 1,
+              };
+            }
+          }
         }
       } else {
         // if there is a tie, no one is eliminated

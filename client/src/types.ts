@@ -27,6 +27,7 @@ export type Player = {
   inGame: boolean;
   isHost?: boolean;
   name: string;
+  wins: number;
 };
 
 export interface ServerToClientEvents {
