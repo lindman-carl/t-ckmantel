@@ -58,7 +58,15 @@ io.on("connection", (socket) => {
         for (let i = 0; i < game.numUndercover; i++) {
             undercoverPlayerIds.push(playerIdsInRandomOrder[i]);
         }
+        // reset all players to not undercover
+        // then set undercover players to undercover
         const updatedPlayers = { ...game.players };
+        for (const playerId of playerIds) {
+            updatedPlayers[playerId] = {
+                ...updatedPlayers[playerId],
+                isUndercover: false,
+            };
+        }
         for (const playerId of undercoverPlayerIds) {
             updatedPlayers[playerId] = {
                 ...updatedPlayers[playerId],
@@ -80,6 +88,7 @@ io.on("connection", (socket) => {
         const startPlayer = playerIdsInRandomOrder[0];
         // count expected votes
         const expectedVotes = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
+        const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
         // update game
         const updatedGame = {
             ...game,
@@ -87,8 +96,11 @@ io.on("connection", (socket) => {
             startPlayer,
             words: randomWords,
             gameStarted: true,
+            gameOver: false,
+            round: 0,
             expectedVotes,
             votes: {},
+            message,
         };
         // update games map
         games.set(gameId, updatedGame);
@@ -158,6 +170,15 @@ io.on("connection", (socket) => {
                         .map((player) => player.name);
                     message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(", ")}`;
                     gameOver = true;
+                    // give wins to commoners
+                    for (const playerId of Object.keys(updatedPlayers)) {
+                        if (!updatedPlayers[playerId].isUndercover) {
+                            updatedPlayers[playerId] = {
+                                ...updatedPlayers[playerId],
+                                wins: updatedPlayers[playerId].wins + 1,
+                            };
+                        }
+                    }
                 }
                 else if (numCommonersInGame <= numUndercoversInGame) {
                     // if there are as many or fewer commoners than undercover players left, the undercover win
@@ -166,6 +187,15 @@ io.on("connection", (socket) => {
                         .map((player) => player.name);
                     message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(", ")}`;
                     gameOver = true;
+                    // give wins to undercovers
+                    for (const playerId of Object.keys(updatedPlayers)) {
+                        if (updatedPlayers[playerId].isUndercover) {
+                            updatedPlayers[playerId] = {
+                                ...updatedPlayers[playerId],
+                                wins: updatedPlayers[playerId].wins + 1,
+                            };
+                        }
+                    }
                 }
             }
             else {

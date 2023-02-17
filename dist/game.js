@@ -30,6 +30,7 @@ export const createGame = (gameId, hostId, hostName) => {
                 inGame: false,
                 isHost: true,
                 name: hostName,
+                wins: 0,
             },
         },
         round: 0,
@@ -65,6 +66,7 @@ export const addPlayerToGame = (gameId, playerId, playerName) => {
             isUndercover: false,
             inGame: false,
             name: playerName,
+            wins: 0,
         },
     };
     const updatedGame = { ...game, players: newPlayers };
