@@ -26,6 +26,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   },
 });
 
+app.use(express.static("dist/client"));
+
 io.on("connection", (socket) => {
   // log("server", `client connected: ${socket.id}`);
 
@@ -269,7 +271,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (_, res) => {
-  res.sendFile(path.join(__dirname, "client", "index.html"));
+  res.sendFile(path.resolve(__dirname, "dist", "index.html"));
 });
 
 httpServer.listen(process.env.PORT, () => {
