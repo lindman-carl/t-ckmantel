@@ -11,9 +11,13 @@ import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types";
 
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  "http://localhost:3000"
-);
+const SERVER_URI =
+  process.env.NODE_ENV === "production"
+    ? "https://tackmantel.lindman.dev"
+    : "http://localhost:3000";
+
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> =
+  io(SERVER_URI);
 
 const App = () => {
   const [isConnected, setIsConnected] = useState(false);
