@@ -1,10 +1,4 @@
-import {
-  games,
-  createGame,
-  addPlayerToGame,
-  removePlayerFromGame,
-  setWords,
-} from "./game.js";
+import { games, createGame, addPlayerToGame } from "./game.js";
 
 describe("createGame", () => {
   beforeAll(() => {
@@ -16,7 +10,7 @@ describe("createGame", () => {
     expect(games.size).toBe(0);
 
     // create game
-    createGame("test");
+    createGame("test", "test-host", "test-player0");
     const game = games.get("test");
     if (!game) fail("game not found");
 
@@ -46,10 +40,10 @@ describe("addPlayerToGame", () => {
 
   it("should add a player to a game", () => {
     // create game
-    createGame("test");
+    createGame("test", "test-host", "test-player0");
 
     // add player to game
-    addPlayerToGame("test", "player0");
+    addPlayerToGame("test", "player-id1", "test-player1");
 
     // get game
     const game = games.get("test");
@@ -59,62 +53,5 @@ describe("addPlayerToGame", () => {
     const playerIds = Object.keys(game.players);
     expect(playerIds).toHaveLength(1);
     expect(playerIds[0]).toBe("player0");
-  });
-});
-
-describe("removePlayerFromGame", () => {
-  beforeAll(() => {
-    // clear games
-    games.clear();
-  });
-
-  it("should remove a player from a game", () => {
-    // create game
-    createGame("test");
-
-    // add player to game
-    addPlayerToGame("test", "player0");
-
-    // get game
-    let game = games.get("test");
-    if (!game) fail("game not found");
-
-    // expect player to be added
-    let playerIds = Object.keys(game.players);
-    expect(playerIds).toHaveLength(1);
-
-    // remove player from game
-    removePlayerFromGame("test", "player0");
-
-    // get game
-    game = games.get("test");
-    if (!game) fail("game not found");
-
-    // expect no players to exist
-    playerIds = Object.keys(game.players);
-    expect(playerIds).toHaveLength(0);
-  });
-});
-
-describe("setWords", () => {
-  beforeAll(() => {
-    // clear games
-    games.clear();
-  });
-
-  it("should set words for a game", () => {
-    // create game
-    createGame("test");
-
-    // set words
-    setWords("test", "common", "undercover");
-
-    // get game
-    const game = games.get("test");
-    if (!game) fail("game not found");
-
-    // expect words to be set
-    expect(game.words.undercover).toBe("undercover");
-    expect(game.words.common).toBe("common");
   });
 });

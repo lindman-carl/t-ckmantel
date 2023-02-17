@@ -1,5 +1,5 @@
 import { Game } from "./types.js";
-import { getRandomKeys, log, validateWord } from "./utils.js";
+import { log } from "./utils.js";
 
 export const games = new Map<string, Game>();
 
@@ -11,38 +11,70 @@ export const logGame = (gameId: string): void => {
     return;
   }
 
-  log("game", `game ${game.id} - ${game.name}`);
-  log("game", `players: ${game.players}`);
+  log("game", `${game.id}`);
+  log("game", `players:`);
+  Object.entries(game.players).forEach(([id, player]) => {
+    log("game", `  ${id}: ${JSON.stringify(player)}`);
+  });
 };
 
-export const createGame = (id: string): void => {
+export const logAllGames = (): void => {
+  games.forEach((game) => {
+    logGame(game.id);
+  });
+};
+
+export const createGame = (
+  gameId: string,
+  hostId: string,
+  hostName: string
+): Game => {
   // create a new game with id and default values
   // and add it to the games map
 
   const game: Game = {
-    id,
-    name: `game-${id}`,
-    players: {},
+    id: gameId,
+    host: hostId,
+    players: {
+      [hostId]: {
+        isUndercover: false,
+        inGame: false,
+        isHost: true,
+        name: hostName,
+      },
+    },
     round: 0,
+    gameOver: false,
+    gameStarted: false,
     numUndercover: 1,
     words: {
       undercover: "undercover",
       common: "common",
     },
     startPlayer: null,
+    votes: {},
+    allowVote: false,
+    expectedVotes: 0,
+    currentVoteCount: 0,
+    message: null,
   };
 
-  games.set(id, game);
+  games.set(gameId, game);
+  return game;
 };
 
-export const addPlayerToGame = (gameId: string, playerId: string): void => {
+export const addPlayerToGame = (
+  gameId: string,
+  playerId: string,
+  playerName: string
+): Game | null => {
   // add player to game object by id
 
   // get game from games map
   const game = games.get(gameId);
   if (!game) {
     log("game", `game ${gameId} not found`);
-    return;
+    return null;
   }
 
   // add player to game
@@ -51,6 +83,7 @@ export const addPlayerToGame = (gameId: string, playerId: string): void => {
     [playerId]: {
       isUndercover: false,
       inGame: false,
+      name: playerName,
     },
   };
   const updatedGame = { ...game, players: newPlayers };
@@ -59,68 +92,6 @@ export const addPlayerToGame = (gameId: string, playerId: string): void => {
   games.set(game.id, updatedGame);
 
   log("game", `player ${playerId} added to game ${gameId}`);
-};
 
-export const removePlayerFromGame = (
-  gameId: string,
-  playerId: string
-): void => {
-  // remove player from game object by id
-
-  // get game from games map
-  const game = games.get(gameId);
-  if (!game) {
-    log("game", `game ${gameId} not found`);
-    return;
-  }
-
-  // remove player from game
-  const newPlayers = {
-    ...game.players,
-  };
-  delete newPlayers[playerId];
-
-  const updatedGame = {
-    ...game,
-    players: newPlayers,
-  };
-
-  // update game in games map
-  games.set(game.id, updatedGame);
-
-  log("game", `player ${playerId} removed from game ${gameId}`);
-};
-
-export const setWords = (
-  gameId: string,
-  commonWord: string,
-  undercoverWord: string
-): void => {
-  // set the words for the game
-
-  // validate words
-  if (!validateWord(commonWord) || !validateWord(undercoverWord)) {
-    log("game", `invalid words`);
-    return;
-  }
-
-  // get game from games map
-  const game = games.get(gameId);
-  if (!game) {
-    log("game", `game ${gameId} not found`);
-    return;
-  }
-
-  // set words
-  const updatedWords = {
-    common: commonWord,
-    undercover: undercoverWord,
-  };
-  const updatedGame = {
-    ...game,
-    words: updatedWords,
-  };
-
-  // update game in games map
-  games.set(game.id, updatedGame);
+  return updatedGame;
 };
