@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import * as dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
 
 // local imports
 import { getRandomWords, log } from "./utils.js";
@@ -15,6 +16,7 @@ import {
 } from "./game.js";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
@@ -267,7 +269,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (_, res) => {
-  res.sendFile(path.join(__dirname, "dist_client", "index.html"));
+  res.sendFile(path.join(__dirname, "client", "index.html"));
 });
 
 httpServer.listen(process.env.PORT, () => {
