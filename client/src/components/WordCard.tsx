@@ -15,7 +15,13 @@ const WordCard = ({ word }: Props) => {
             <img src={EyeHideSvg} alt="eye hide" width="32px" height="32px" />
           </div>
           <div className="col-span-3 col-start-1 row-start-2 flex items-center justify-center text-4xl font-bold drop-shadow-sm">
-            <img src={LogoWebp} alt="logo" width="100px" height="100px" />
+            <img
+              src={LogoWebp}
+              alt="logo"
+              width="100px"
+              height="100px"
+              className="pointer-events-none"
+            />
           </div>
           <div className="col-span-3 col-start-1 row-start-3 flex items-center justify-center text-sm font-light">
             <p>Press to view your word</p>
