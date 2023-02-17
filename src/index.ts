@@ -26,7 +26,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   },
 });
 
-app.use(express.static("dist/client"));
+app.use(express.static("client"));
 
 io.on("connection", (socket) => {
   // log("server", `client connected: ${socket.id}`);
