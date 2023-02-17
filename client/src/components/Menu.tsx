@@ -18,8 +18,10 @@ const Menu = ({ handleJoinGame, handleCreateGame }: MenuProps) => {
   if (menuState === "join") {
     // Join game
     return (
-      <div className="flex flex-col items-center justify-center gap-y-4 bg-rose-900">
-        <h1>Join game</h1>
+      <div className="flex w-96 flex-col items-stretch justify-center gap-y-2 rounded-md bg-rose-700 p-4 shadow-inner">
+        <h2 className="text-center text-2xl font-semibold text-white underline decoration-rose-900 decoration-2 underline-offset-2 drop-shadow">
+          Join game
+        </h2>
         <input
           type="text"
           placeholder="Game ID"
