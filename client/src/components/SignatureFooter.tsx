@@ -5,7 +5,7 @@ const SignatureFooter = () => {
     <div className="my-4 inline-flex gap-4 text-center text-base font-light text-slate-800">
       @lindman_dev
       <a
-        href="https://github.com/yoga-python/tackmantel"
+        href="https://github.com/lindman-carl/tackmantel"
         target="_blank"
         rel="noreferrer"
         className="inline-flex items-center gap-1 font-semibold underline decoration-rose-900 decoration-2 underline-offset-auto "
