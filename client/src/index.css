@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+    @apply bg-rose-600 bg-checkered-pattern ;
+}
+
+.flip {
+    perspective: 600px;  
+}
+  
+.flip-content {
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+}
+
+.flip:active .flip-content {
+    transform: rotateX(180deg);
+    transition: transform 0.75s;
+}
+
+.flip-front, .flip-back {
+    position: absolute;
+    backface-visibility: hidden;  
+}
+
+.flip-back {
+    transform: rotateX(180deg);
+}
