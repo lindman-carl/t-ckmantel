@@ -47,7 +47,7 @@ export const createGame = (
     round: 0,
     gameOver: false,
     gameStarted: false,
-    numUndercover: 1,
+    numUndercover: 2,
     words: {
       undercover: "undercover",
       common: "common",

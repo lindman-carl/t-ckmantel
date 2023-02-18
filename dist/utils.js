@@ -14,6 +14,13 @@ export const wordPairs = [
     ["kalle anka", "musse pigg"],
     ["carpe diem", "yolo"],
     ["kaffe", "cola-zero"],
+    ["kroatien", "serbien"],
+    ["sverige", "danmark"],
+    ["glögg", "julmust"],
+    ["guld", "silver"],
+    ["snus", "cigg"],
+    ["tyskland", "österrike"],
+    ["armbågar", "knän"],
 ];
 export const getRandomWords = () => {
     // get random word pair
