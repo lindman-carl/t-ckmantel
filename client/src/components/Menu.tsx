@@ -85,14 +85,14 @@ const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
           placeholder="game id"
           value={gameId}
           onChange={(e) => setGameId(e.target.value)}
-          className="rounded px-4 py-2 text-sky-900 shadow-inner"
+          className="rounded-md px-4 py-2 text-sky-900 shadow-inner"
         />
         <input
           type="text"
           placeholder="your name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          className="rounded px-4 py-2 text-sky-900 shadow-inner"
+          className="rounded-md px-4 py-2 text-sky-900 shadow-inner"
         />
         {errorMessage && <div className="w-full text-sm">{errorMessage}</div>}
         <div className="mx-auto mt-4">
