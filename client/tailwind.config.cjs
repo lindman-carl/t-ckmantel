@@ -6,6 +6,7 @@ module.exports = {
       backgroundImage: {
         "back-pattern": "url('./assets/back-pattern.png')",
         "checkered-pattern": "url('./assets/checkered-pattern.png')",
+        "black-scales": "url('./assets/black-scales.png')",
       },
     },
   },

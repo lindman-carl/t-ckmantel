@@ -6,6 +6,7 @@ import Button from "./Button";
 // svgs
 import EyeHideSvg from "../assets/eye-hide.svg";
 import EyeShowSvg from "../assets/eye-show.svg";
+import CogSvg from "../assets/cog.svg";
 
 type Props = {
   open: boolean;
@@ -71,10 +72,15 @@ const SideDrawer = ({ open, onClose }: Props) => {
 
   return (
     <Drawer open={open} direction="left" onClose={onClose} size={300}>
-      <div className="flex h-full flex-col items-center justify-start gap-y-4 bg-slate-700 text-white">
-        <h2 className="py-4 text-center text-2xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
-          Settings
-        </h2>
+      <div className="flex h-full flex-col items-center justify-start gap-y-4 bg-slate-700 bg-black-scales text-white">
+        <div className="grid w-full grid-cols-5 grid-rows-1">
+          <h2 className="col-span-3 col-start-2 py-4 text-center text-2xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
+            Settings
+          </h2>
+          <div className="col-span-1 col-start-5 flex items-center justify-start">
+            <img src={CogSvg} alt="settings" />
+          </div>
+        </div>
         <div className="w-full px-4">
           <div className="flex w-full flex-col rounded-md bg-slate-800 p-4 shadow-inner">
             <h3 className="mb-2 text-center text-xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
