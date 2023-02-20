@@ -37,8 +37,18 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  "game-create": (gameId: string, hostId: string, hostName: string) => void;
-  "game-join": (gameId: string, playerId: string, playerName: string) => void;
+  "game-create": (
+    gameId: string,
+    hostId: string,
+    hostName: string,
+    callback: (success: boolean) => void
+  ) => void;
+  "game-join": (
+    gameId: string,
+    playerId: string,
+    playerName: string,
+    callback: (success: boolean) => void
+  ) => void;
   "game-leave": (gameId: string, playerId: string) => void;
   "game-start": (gameId: string) => void;
   "game-vote": (gameId: string, playerId: string, voteForId: string) => void;

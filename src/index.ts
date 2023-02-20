@@ -57,25 +57,30 @@ io.on("connection", (socket) => {
     log("server", `client disconnected: ${clientId}`);
   });
 
-  socket.on("game-create", (gameId, hostId, hostName) => {
+  socket.on("game-create", (gameId, hostId, hostName, callback) => {
     const game = createGame(gameId, hostId, hostName);
     if (!game) {
       console.log("could not create game");
+      callback(false);
       return;
     }
+
+    callback(true);
     socket.join(gameId);
     io.to(gameId).emit("game-update", game);
 
     logAllGames();
   });
 
-  socket.on("game-join", (gameId, playerId, playerName) => {
+  socket.on("game-join", (gameId, playerId, playerName, callback) => {
     const game = addPlayerToGame(gameId, playerId, playerName);
     if (!game) {
       console.log("could not join game");
+      callback(false);
       return;
     }
 
+    callback(true);
     socket.join(gameId);
     io.to(gameId).emit("game-update", game);
 

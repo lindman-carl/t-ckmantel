@@ -107,14 +107,26 @@ const App = () => {
 
   // event handlers
   const handleCreateGame = (gameId: string, hostName: string) => {
-    socket.emit("game-create", gameId, CLIENT_ID, hostName);
-    setHasJoinedGame(true);
-    setIsHost(true);
+    socket.emit("game-create", gameId, CLIENT_ID, hostName, (success) => {
+      console.log("create game success", success);
+      if (!success) {
+        alert("Game id already exists");
+        return;
+      }
+
+      setHasJoinedGame(true);
+      setIsHost(true);
+    });
   };
 
   const handleJoinGame = (gameId: string, playerName: string) => {
-    socket.emit("game-join", gameId, CLIENT_ID, playerName);
-    setHasJoinedGame(true);
+    socket.emit("game-join", gameId, CLIENT_ID, playerName, (success) => {
+      if (!success) {
+        alert("Game id does not exist");
+        return;
+      }
+      setHasJoinedGame(true);
+    });
   };
 
   const handleStartGame = (gameId: string) => {
