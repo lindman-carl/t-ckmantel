@@ -33,7 +33,7 @@ const WordCard = ({ word }: Props) => {
           </div>
           <p className="col-span-3 col-start-1 row-start-2 flex items-center justify-center text-3xl font-bold">
             {word === "" ? (
-              <div className="text-xl">wait for game to start</div>
+              <span className="text-xl">wait for game to start</span>
             ) : (
               word
             )}
