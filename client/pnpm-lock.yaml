@@ -11,6 +11,7 @@ specifiers:
   prettier-plugin-tailwindcss: ^0.2.2
   react: ^18.2.0
   react-dom: ^18.2.0
+  react-modern-drawer: ^1.2.0
   socket.io-client: ^4.6.0
   tailwindcss: ^3.2.6
   typescript: ^4.9.3
@@ -21,6 +22,7 @@ dependencies:
   nanoid: 4.0.1
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
+  react-modern-drawer: 1.2.0_react@18.2.0
   socket.io-client: 4.6.0
   zod: 3.20.6
 
@@ -1158,6 +1160,15 @@ packages:
       loose-envify: 1.4.0
       react: 18.2.0
       scheduler: 0.23.0
+    dev: false
+
+  /react-modern-drawer/1.2.0_react@18.2.0:
+    resolution: {integrity: sha512-GBQaeDNpnt6GFm3U9y/wzkZerP6R92CrgC9ge3/PHCm0F0LdUzt7rjFSwdd47Pdy6+FhXKR2rn7VxW3pl/+m9w==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>16.0.0'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /react-refresh/0.14.0:

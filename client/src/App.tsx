@@ -6,6 +6,7 @@ import Logo from "./components/Logo";
 import Menu from "./components/Menu";
 import Modal from "./components/Modal";
 import PlayerList from "./components/PlayerList";
+import SideDrawer from "./components/SideDrawer";
 import SignatureFooter from "./components/SignatureFooter";
 import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
@@ -37,6 +38,7 @@ const App = () => {
   const [playerWord, setPlayerWord] = useState<string>("");
   const [hasVoted, setHasVoted] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [drawerIsOpen, setDrawerIsOpen] = useState(false);
 
   useEffect(() => {
     console.log("client id", CLIENT_ID);
@@ -166,6 +168,11 @@ const App = () => {
     }
   };
 
+  const handleClickSettings = () => {
+    console.log("opening settings");
+    setDrawerIsOpen(!drawerIsOpen);
+  };
+
   return (
     <>
       <div className="flex h-screen w-screen flex-col items-center justify-start text-lg text-white">
@@ -173,7 +180,28 @@ const App = () => {
         {isConnected ? (
           hasJoinedGame && game ? (
             <div className="flex flex-col items-center gap-y-4">
-              <GameInfo game={game} />
+              <GameInfo
+                game={game}
+                isHost={isHost}
+                onClickSettings={handleClickSettings}
+              >
+                {isHost &&
+                  (game.gameStarted ? (
+                    game.gameOver ? (
+                      <Button
+                        onClick={() => handleStartGame(game.id)}
+                        label={"Restart game"}
+                      />
+                    ) : (
+                      <div>Game has started</div>
+                    )
+                  ) : (
+                    <Button
+                      onClick={() => handleStartGame(game.id)}
+                      label={"Start game"}
+                    />
+                  ))}
+              </GameInfo>
               <WordCard word={playerWord} />
               <PlayerList
                 players={game.players}
@@ -189,27 +217,6 @@ const App = () => {
                 handleVote={handleVote}
                 handleKick={handleKickPlayer}
               />
-              {isHost ? (
-                game.gameStarted ? (
-                  game.gameOver ? (
-                    <Button
-                      onClick={() => handleStartGame(game.id)}
-                      label={"Restart game"}
-                    />
-                  ) : (
-                    <div>Game has started</div>
-                  )
-                ) : (
-                  <Button
-                    onClick={() => handleStartGame(game.id)}
-                    label={"Start game"}
-                  />
-                )
-              ) : (
-                <div className="my-2">
-                  Waiting for the host to start the game...
-                </div>
-              )}
             </div>
           ) : (
             <Menu onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} />
@@ -226,6 +233,7 @@ const App = () => {
           onClose={() => setShowModal(false)}
         />
       )}
+      <SideDrawer open={drawerIsOpen} onClose={() => setDrawerIsOpen(false)} />
     </>
   );
 };
