@@ -12,6 +12,7 @@ import {
   createGame,
   logAllGames,
   games,
+  playersInGame,
   logGame,
 } from "./game.js";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
@@ -29,10 +30,31 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 app.use(express.static("dist/client"));
 
 io.on("connection", (socket) => {
-  // log("server", `client connected: ${socket.id}`);
+  const clientId = socket.handshake.query.clientId;
+  if (!clientId || typeof clientId !== "string") {
+    console.log("no client id");
+    return;
+  }
+
+  log("server", `client connected: ${clientId}`);
+
+  if (playersInGame.has(clientId)) {
+    const gameId = playersInGame.get(clientId);
+    if (!gameId) {
+      console.log("could not find game id");
+      return;
+    }
+    socket.join(gameId);
+    const game = games.get(gameId);
+    if (!game) {
+      console.log("could not find game");
+      return;
+    }
+    socket.emit("game-reconnect-player", game);
+  }
 
   socket.on("disconnect", () => {
-    log("server", `client disconnected: ${socket.id}`);
+    log("server", `client disconnected: ${clientId}`);
   });
 
   socket.on("game-create", (gameId, hostId, hostName) => {

@@ -10,14 +10,23 @@ import SignatureFooter from "./components/SignatureFooter";
 import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types";
+import { getClientId } from "./utils";
+
+const CLIENT_ID = getClientId();
 
 const SERVER_URI =
   process.env.NODE_ENV === "production"
     ? "https://tackmantel.lindman.dev"
     : "http://localhost:3000";
 
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> =
-  io(SERVER_URI);
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+  SERVER_URI,
+  {
+    query: {
+      clientId: CLIENT_ID,
+    },
+  }
+);
 
 const App = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -30,6 +39,7 @@ const App = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    console.log("client id", CLIENT_ID);
     socket.on("connect", () => {
       setIsConnected(true);
     });
@@ -38,12 +48,37 @@ const App = () => {
       setIsConnected(false);
     });
 
+    socket.on("game-reconnect-player", (game) => {
+      console.log("reconnecting player");
+      setHasJoinedGame(true);
+      setGame(game);
+
+      // set host status
+      if (game.players[CLIENT_ID].isHost) {
+        setIsHost(true);
+      }
+
+      // set player word
+      if (game.gameStarted) {
+        if (game.players[CLIENT_ID].isUndercover) {
+          setPlayerWord(game.words.undercover);
+        } else {
+          setPlayerWord(game.words.common);
+        }
+      }
+
+      // set vote status
+      if (game.votes.hasOwnProperty(CLIENT_ID)) {
+        setHasVoted(true);
+      }
+    });
+
     socket.on("game-update", (game) => {
       console.log("updating game", game);
       setGame(game);
 
       if (game.gameStarted) {
-        if (game.players[socket.id].isUndercover) {
+        if (game.players[CLIENT_ID].isUndercover) {
           setPlayerWord(game.words.undercover);
         } else {
           setPlayerWord(game.words.common);
@@ -77,7 +112,7 @@ const App = () => {
       return;
     }
 
-    socket.emit("game-create", gameId, socket.id, hostName);
+    socket.emit("game-create", gameId, CLIENT_ID, hostName);
     setHasJoinedGame(true);
     setIsHost(true);
   };
@@ -88,7 +123,7 @@ const App = () => {
       return;
     }
 
-    socket.emit("game-join", gameId, socket.id, playerName);
+    socket.emit("game-join", gameId, CLIENT_ID, playerName);
     setHasJoinedGame(true);
   };
 
@@ -102,7 +137,7 @@ const App = () => {
 
   const handleVote = (voteForId: string) => {
     if (!hasVoted && game) {
-      socket.emit("game-vote", game.id, socket.id, voteForId);
+      socket.emit("game-vote", game.id, CLIENT_ID, voteForId);
       setHasVoted(true);
     }
   };
@@ -123,9 +158,9 @@ const App = () => {
                   game.gameStarted &&
                   !hasVoted &&
                   !game.gameOver &&
-                  game.players[socket.id].inGame
+                  game.players[CLIENT_ID].inGame
                 }
-                playerId={socket.id}
+                playerId={CLIENT_ID}
                 handleVote={handleVote}
               />
               {isHost ? (

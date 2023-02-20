@@ -2,6 +2,7 @@ import { Game } from "./types.js";
 import { log } from "./utils.js";
 
 export const games = new Map<string, Game>();
+export const playersInGame = new Map<string, string>();
 
 export const logGame = (gameId: string): void => {
   // get game from games map
@@ -15,6 +16,13 @@ export const logGame = (gameId: string): void => {
   log("game", `players:`);
   Object.entries(game.players).forEach(([id, player]) => {
     log("game", `  ${id}: ${JSON.stringify(player)}`);
+  });
+};
+
+export const logAllPlayers = (): void => {
+  log("game", `players:`);
+  playersInGame.forEach((gameId, playerId) => {
+    log("game", `  ${playerId}: ${gameId}`);
   });
 };
 
@@ -61,6 +69,9 @@ export const createGame = (
   };
 
   games.set(gameId, game);
+
+  // add player to playersInGame map
+  playersInGame.set(hostId, gameId);
   return game;
 };
 
@@ -93,7 +104,11 @@ export const addPlayerToGame = (
   // update game in games map
   games.set(game.id, updatedGame);
 
+  // add player to playersInGame map
+  playersInGame.set(playerId, gameId);
+
   log("game", `player ${playerId} added to game ${gameId}`);
+  logAllPlayers();
 
   return updatedGame;
 };

@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 const animals: string[] = [
   "hippo",
   "horse",
@@ -34,4 +36,15 @@ export const getRandomGameId = () => {
   const randomInt = Math.floor(Math.random() * 1000);
 
   return `${randomColor}${randomAnimal}${randomInt}`;
+};
+
+export const getClientId = (): string => {
+  const clientId = localStorage.getItem("clientId");
+  if (clientId) {
+    return clientId;
+  } else {
+    const newClientId = nanoid(15);
+    localStorage.setItem("clientId", newClientId);
+    return newClientId;
+  }
 };

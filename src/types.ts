@@ -33,6 +33,7 @@ export type Player = {
 export interface ServerToClientEvents {
   "game-update": (game: Game) => void;
   "game-round-new": () => void;
+  "game-reconnect-player": (game: Game) => void;
 }
 
 export interface ClientToServerEvents {
