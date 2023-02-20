@@ -2,7 +2,7 @@ import OpenInNewSvg from "../assets/open-in-new.svg";
 
 const SignatureFooter = () => {
   return (
-    <div className="my-4 inline-flex gap-4 text-center text-base font-light text-slate-800">
+    <div className="inline-flex gap-4 py-4 text-center text-base font-light text-slate-800">
       @lindman_dev
       <a
         href="https://github.com/lindman-carl/tackmantel"
