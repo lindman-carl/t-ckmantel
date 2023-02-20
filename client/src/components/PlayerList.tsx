@@ -1,21 +1,22 @@
-import DragHandleSvg from "../assets/drag-handle.svg";
 import MedalSvg from "../assets/medal.svg";
 import { Player } from "../types";
 
 type Props = {
   players: { [id: string]: Player };
-  editable: boolean;
+  canKick: boolean;
   canVote: boolean;
   playerId: string;
   handleVote: (voteForId: string) => void;
+  handleKick: (playerId: string) => void;
 };
 
 const PlayerList = ({
   players,
-  editable,
+  canKick,
   canVote,
   playerId,
   handleVote,
+  handleKick,
 }: Props) => {
   return (
     <div className="w-screen px-4 sm:w-96">
@@ -38,15 +39,9 @@ const PlayerList = ({
                   <img src={MedalSvg} alt="medal" width="24px" height="24px" />
                 </div>
               )}
-              {editable && (
+              {canKick && id !== playerId && (
                 <div className="col-span-1 col-start-5 flex h-full items-center justify-end">
-                  <img
-                    src={DragHandleSvg}
-                    alt="drag handle"
-                    width="32px"
-                    height="32px"
-                    className="pointer-events-none select-none drop-shadow-sm"
-                  />
+                  <button onClick={() => handleKick(id)}>Kick</button>
                 </div>
               )}
               {player.inGame && canVote && id !== playerId && (

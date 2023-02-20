@@ -34,6 +34,7 @@ export interface ServerToClientEvents {
   "game-update": (game: Game) => void;
   "game-round-new": () => void;
   "game-reconnect-player": (game: Game) => void;
+  "game-kick": (playerId: string) => void;
 }
 
 export interface ClientToServerEvents {
@@ -49,7 +50,8 @@ export interface ClientToServerEvents {
     playerName: string,
     callback: (success: boolean) => void
   ) => void;
-  "game-leave": (gameId: string, playerId: string) => void;
+  "game-kick": (gameId: string, playerId: string, hostId: string) => void;
   "game-start": (gameId: string) => void;
   "game-vote": (gameId: string, playerId: string, voteForId: string) => void;
+  "room-leave": (gameId: string) => void;
 }

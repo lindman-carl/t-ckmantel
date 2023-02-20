@@ -14,6 +14,7 @@ import {
   games,
   playersInGame,
   logGame,
+  removePlayerFromGame,
 } from "./game.js";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
 
@@ -85,6 +86,42 @@ io.on("connection", (socket) => {
     io.to(gameId).emit("game-update", game);
 
     logAllGames();
+  });
+
+  socket.on("game-kick", (gameId, playerId, hostId) => {
+    // get game
+    const game = games.get(gameId);
+    if (!game) {
+      console.log("could not find game");
+      return;
+    }
+
+    // check if host
+    if (game.host !== hostId) {
+      console.log("only host can kick");
+      return;
+    }
+
+    // remove player from game
+    const updatedGame = removePlayerFromGame(gameId, playerId);
+
+    if (!updatedGame) {
+      console.log("failed to kick player", playerId);
+      return;
+    }
+
+    // kick player from game
+    io.to(gameId).emit("game-kick", playerId);
+
+    // update game
+    games.set(gameId, updatedGame);
+    io.to(gameId).emit("game-update", updatedGame);
+
+    logAllGames();
+  });
+
+  socket.on("room-leave", (gameId) => {
+    socket.leave(gameId);
   });
 
   socket.on("game-start", (gameId) => {

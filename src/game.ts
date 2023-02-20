@@ -99,7 +99,21 @@ export const addPlayerToGame = (
       wins: 0,
     },
   };
-  const updatedGame = { ...game, players: newPlayers };
+
+  const newVotes = { ...game.votes };
+  if (newVotes[playerId]) {
+    delete newVotes[playerId];
+  }
+
+  const newVoteCount = Object.keys(newVotes).length;
+
+  const updatedGame: Game = {
+    ...game,
+    players: newPlayers,
+    expectedVotes: Object.keys(newPlayers).length - 1,
+    votes: newVotes,
+    currentVoteCount: newVoteCount,
+  };
 
   // update game in games map
   games.set(game.id, updatedGame);
@@ -109,6 +123,36 @@ export const addPlayerToGame = (
 
   log("game", `player ${playerId} added to game ${gameId}`);
   logAllPlayers();
+
+  return updatedGame;
+};
+
+export const removePlayerFromGame = (
+  gameId: string,
+  playerId: string
+): Game | null => {
+  // remove player from game object by id
+  // also remove player from playersInGame map
+
+  // get game from games map
+  const game = games.get(gameId);
+  if (!game) {
+    log("game", `game ${gameId} not found`);
+    return null;
+  }
+
+  // remove player from game
+  const newPlayers = { ...game.players };
+  delete newPlayers[playerId];
+  const updatedGame = { ...game, players: newPlayers };
+
+  // update game in games map
+  games.set(game.id, updatedGame);
+
+  // remove player from playersInGame map
+  playersInGame.delete(playerId);
+
+  log("game", `player ${playerId} removed from game ${gameId}`);
 
   return updatedGame;
 };

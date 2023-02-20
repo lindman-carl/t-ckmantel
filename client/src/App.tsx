@@ -90,12 +90,23 @@ const App = () => {
       setHasVoted(false);
     });
 
+    socket.on("game-kick", (playerId) => {
+      if (!game) return;
+      if (playerId !== CLIENT_ID) return;
+      setHasJoinedGame(false);
+      setHasVoted(false);
+      setGame(null);
+      setIsHost(false);
+      setPlayerWord("");
+      alert("You have been kicked from the game");
+      setTimeout(() => {
+        socket.emit("room-leave", game.id);
+      }, 2000);
+    });
+
     return () => {
-      // clean up socket listeners
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("game-update");
-      socket.off("game-round-new");
+      // clean up socket all listeners
+      socket.removeAllListeners();
     };
   }, []);
 
@@ -144,6 +155,17 @@ const App = () => {
     }
   };
 
+  const handleKickPlayer = (playerId: string) => {
+    if (!isHost) {
+      console.log("only the host can kick players");
+      return;
+    }
+
+    if (game) {
+      socket.emit("game-kick", game.id, playerId, CLIENT_ID);
+    }
+  };
+
   return (
     <>
       <div className="flex h-screen w-screen flex-col items-center justify-start text-lg text-white">
@@ -155,7 +177,7 @@ const App = () => {
               <WordCard word={playerWord} />
               <PlayerList
                 players={game.players}
-                editable={isHost && !game.gameStarted}
+                canKick={isHost && !game.gameStarted}
                 canVote={
                   game.gameStarted &&
                   !hasVoted &&
@@ -164,6 +186,7 @@ const App = () => {
                 }
                 playerId={CLIENT_ID}
                 handleVote={handleVote}
+                handleKick={handleKickPlayer}
               />
               {isHost ? (
                 game.gameStarted ? (
