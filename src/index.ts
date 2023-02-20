@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // local imports
-import { getRandomWords, log } from "./utils.js";
+import { getRandomWords, log, shuffleArray } from "./utils.js";
 import {
   addPlayerToGame,
   createGame,
@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
     // set who is undercover
     // get random order of players
     const playerIds = Object.keys(game.players);
-    let playerIdsInRandomOrder = [...playerIds].sort(() => Math.random() - 0.5);
+    let playerIdsInRandomOrder = shuffleArray([...playerIds]);
 
     // get ids of first numUndercover players
     const undercoverPlayerIds = [];
@@ -135,7 +135,7 @@ io.on("connection", (socket) => {
 
     // set who is the first player
     // rerandomize player order
-    playerIdsInRandomOrder = [...playerIds].sort(() => Math.random() - 0.5);
+    playerIdsInRandomOrder = shuffleArray([...playerIds]);
     const startPlayer = playerIdsInRandomOrder[0];
 
     // count expected votes
