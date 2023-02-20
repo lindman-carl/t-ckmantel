@@ -173,6 +173,17 @@ const App = () => {
     setDrawerIsOpen(!drawerIsOpen);
   };
 
+  const handleSaveSettings = (
+    gameMode: string,
+    word1: string,
+    word2: string
+  ) => {
+    console.log("saving settings");
+    console.log(gameMode, word1, word2);
+
+    setDrawerIsOpen(false);
+  };
+
   return (
     <>
       <div className="flex h-screen w-screen flex-col items-center justify-start text-lg text-white">
@@ -236,7 +247,11 @@ const App = () => {
           onClose={() => setShowModal(false)}
         />
       )}
-      <SideDrawer open={drawerIsOpen} onClose={() => setDrawerIsOpen(false)} />
+      <SideDrawer
+        open={drawerIsOpen}
+        onClose={() => setDrawerIsOpen(false)}
+        onSaveSettings={handleSaveSettings}
+      />
     </>
   );
 };

@@ -6,10 +6,12 @@ import Button from "./Button";
 // svgs
 import EyeHideSvg from "../assets/eye-hide.svg";
 import EyeShowSvg from "../assets/eye-show.svg";
+import { z } from "zod";
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  onSaveSettings: (gameMode: string, word1: string, word2: string) => void;
 };
 
 type RadioProps = {
@@ -65,9 +67,30 @@ const WordInput = ({ placeholder, value, onChange }: WordInputProps) => {
   );
 };
 
-const SideDrawer = ({ open, onClose }: Props) => {
+const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
+  const [gameMode, setGameMode] = useState<"random" | "custom">("random");
   const [firstWord, setFirstWord] = useState("");
   const [secondWord, setSecondWord] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSaveSettings = () => {
+    if (gameMode === "custom") {
+      // validate words with zod
+      const wordSchema = z
+        .string()
+        .min(1, { message: "Both words must contain at least 1 character" })
+        .max(30, { message: "Both words must contain at most 30 characters" });
+      try {
+        wordSchema.parse(firstWord);
+        wordSchema.parse(secondWord);
+        onSaveSettings(gameMode, firstWord, secondWord);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          setErrorMessage(error.issues[0].message);
+        }
+      }
+    }
+  };
 
   return (
     <Drawer open={open} direction="left" onClose={onClose} size={300}>
@@ -84,13 +107,13 @@ const SideDrawer = ({ open, onClose }: Props) => {
             <div className="flex flex-col gap-y-2">
               <RadioButton
                 label="Random words"
-                checked={true}
-                onChange={() => {}}
+                checked={gameMode === "random"}
+                onChange={() => setGameMode("random")}
               />
               <RadioButton
                 label="Custom words"
-                checked={true}
-                onChange={() => {}}
+                checked={gameMode === "custom"}
+                onChange={() => setGameMode("custom")}
               />
             </div>
           </div>
@@ -114,8 +137,19 @@ const SideDrawer = ({ open, onClose }: Props) => {
             </div>
           </div>
         </div>
-        <p className="text-sm font-light">Changes will take effect next game</p>
-        <Button label="Save settings" onClick={() => {}} alternative />
+        <span className="text-sm font-light">
+          Changes will take effect next game
+        </span>
+        <Button
+          label="Save settings"
+          onClick={handleSaveSettings}
+          alternative
+        />
+        {errorMessage && (
+          <span className="px-2 text-center text-sm font-light text-red-600">
+            {errorMessage}
+          </span>
+        )}
       </div>
     </Drawer>
   );

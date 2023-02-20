@@ -6,7 +6,7 @@ type Props = {
 
 const Button = ({ onClick, label, alternative = false }: Props) => {
   const color = alternative
-    ? "bg-rose-700 text-white"
+    ? "bg-white text-slate-800 outline outline-2 outline-offset-[-4px] outline-slate-800"
     : "bg-slate-800 text-white";
   return (
     <button
