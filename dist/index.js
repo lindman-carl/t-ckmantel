@@ -5,8 +5,8 @@ import * as dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 // local imports
-import { getRandomWords, log } from "./utils.js";
-import { addPlayerToGame, createGame, logAllGames, games, logGame, } from "./game.js";
+import { getRandomWords, log, shuffleArray } from "./utils.js";
+import { addPlayerToGame, createGame, logAllGames, games, playersInGame, logGame, removePlayerFromGame, } from "./game.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 const app = express();
@@ -18,29 +18,80 @@ const io = new Server(httpServer, {
 });
 app.use(express.static("dist/client"));
 io.on("connection", (socket) => {
-    // log("server", `client connected: ${socket.id}`);
+    const clientId = socket.handshake.query.clientId;
+    if (!clientId || typeof clientId !== "string") {
+        console.log("no client id");
+        return;
+    }
+    log("server", `client connected: ${clientId}`);
+    if (playersInGame.has(clientId)) {
+        const gameId = playersInGame.get(clientId);
+        if (!gameId) {
+            console.log("could not find game id");
+            return;
+        }
+        socket.join(gameId);
+        const game = games.get(gameId);
+        if (!game) {
+            console.log("could not find game");
+            return;
+        }
+        socket.emit("game-reconnect-player", game);
+    }
     socket.on("disconnect", () => {
-        log("server", `client disconnected: ${socket.id}`);
+        log("server", `client disconnected: ${clientId}`);
     });
-    socket.on("game-create", (gameId, hostId, hostName) => {
+    socket.on("game-create", (gameId, hostId, hostName, callback) => {
         const game = createGame(gameId, hostId, hostName);
         if (!game) {
             console.log("could not create game");
+            callback(false);
             return;
         }
+        callback(true);
         socket.join(gameId);
         io.to(gameId).emit("game-update", game);
         logAllGames();
     });
-    socket.on("game-join", (gameId, playerId, playerName) => {
+    socket.on("game-join", (gameId, playerId, playerName, callback) => {
         const game = addPlayerToGame(gameId, playerId, playerName);
         if (!game) {
             console.log("could not join game");
+            callback(false);
             return;
         }
+        callback(true);
         socket.join(gameId);
         io.to(gameId).emit("game-update", game);
         logAllGames();
+    });
+    socket.on("game-kick", (gameId, playerId, hostId) => {
+        // get game
+        const game = games.get(gameId);
+        if (!game) {
+            console.log("could not find game");
+            return;
+        }
+        // check if host
+        if (game.host !== hostId) {
+            console.log("only host can kick");
+            return;
+        }
+        // remove player from game
+        const updatedGame = removePlayerFromGame(gameId, playerId);
+        if (!updatedGame) {
+            console.log("failed to kick player", playerId);
+            return;
+        }
+        // kick player from game
+        io.to(gameId).emit("game-kick", playerId);
+        // update game
+        games.set(gameId, updatedGame);
+        io.to(gameId).emit("game-update", updatedGame);
+        logAllGames();
+    });
+    socket.on("room-leave", (gameId) => {
+        socket.leave(gameId);
     });
     socket.on("game-start", (gameId) => {
         // get game
@@ -52,7 +103,7 @@ io.on("connection", (socket) => {
         // set who is undercover
         // get random order of players
         const playerIds = Object.keys(game.players);
-        let playerIdsInRandomOrder = [...playerIds].sort(() => Math.random() - 0.5);
+        let playerIdsInRandomOrder = shuffleArray([...playerIds]);
         // get ids of first numUndercover players
         const undercoverPlayerIds = [];
         for (let i = 0; i < game.numUndercover; i++) {
@@ -73,18 +124,19 @@ io.on("connection", (socket) => {
                 isUndercover: true,
             };
         }
-        // set all players to inGame
+        // set all players to inGame and not voted
         for (const playerId of playerIds) {
             updatedPlayers[playerId] = {
                 ...updatedPlayers[playerId],
                 inGame: true,
+                hasVoted: false,
             };
         }
         // get random words
         const randomWords = getRandomWords();
         // set who is the first player
         // rerandomize player order
-        playerIdsInRandomOrder = [...playerIds].sort(() => Math.random() - 0.5);
+        playerIdsInRandomOrder = shuffleArray([...playerIds]);
         const startPlayer = playerIdsInRandomOrder[0];
         // count expected votes
         const expectedVotes = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
@@ -121,7 +173,10 @@ io.on("connection", (socket) => {
         updatedVotes[playerId] = voteForId;
         // count votes
         const voteCount = Object.keys(updatedVotes).length;
-        const updatedPlayers = { ...game.players };
+        const updatedPlayers = {
+            ...game.players,
+            [playerId]: { ...game.players[playerId], hasVoted: true },
+        };
         let message = null;
         let gameOver = false;
         // end round if all votes are in
@@ -170,9 +225,10 @@ io.on("connection", (socket) => {
                         .map((player) => player.name);
                     message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(", ")}`;
                     gameOver = true;
-                    // give wins to commoners
+                    // give wins to surviving commoners
                     for (const playerId of Object.keys(updatedPlayers)) {
-                        if (!updatedPlayers[playerId].isUndercover) {
+                        if (!updatedPlayers[playerId].isUndercover &&
+                            updatedPlayers[playerId].inGame) {
                             updatedPlayers[playerId] = {
                                 ...updatedPlayers[playerId],
                                 wins: updatedPlayers[playerId].wins + 1,
@@ -187,9 +243,10 @@ io.on("connection", (socket) => {
                         .map((player) => player.name);
                     message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(", ")}`;
                     gameOver = true;
-                    // give wins to undercovers
+                    // give wins to surviving undercovers
                     for (const playerId of Object.keys(updatedPlayers)) {
-                        if (updatedPlayers[playerId].isUndercover) {
+                        if (updatedPlayers[playerId].isUndercover &&
+                            updatedPlayers[playerId].inGame) {
                             updatedPlayers[playerId] = {
                                 ...updatedPlayers[playerId],
                                 wins: updatedPlayers[playerId].wins + 1,
@@ -206,6 +263,13 @@ io.on("connection", (socket) => {
             const expectedVotes = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
             // increment round
             const round = game.round + 1;
+            // set all players to not have voted
+            for (const playerId of Object.keys(updatedPlayers)) {
+                updatedPlayers[playerId] = {
+                    ...updatedPlayers[playerId],
+                    hasVoted: false,
+                };
+            }
             // update game
             const updatedGame = {
                 ...game,
@@ -228,6 +292,7 @@ io.on("connection", (socket) => {
         const updatedGame = {
             ...game,
             votes: updatedVotes,
+            players: updatedPlayers,
             currentVoteCount: voteCount,
         };
         // update games map
