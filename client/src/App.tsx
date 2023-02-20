@@ -107,22 +107,12 @@ const App = () => {
 
   // event handlers
   const handleCreateGame = (gameId: string, hostName: string) => {
-    if (hostName.length < 1) {
-      console.log("host name must be at least 1 character");
-      return;
-    }
-
     socket.emit("game-create", gameId, CLIENT_ID, hostName);
     setHasJoinedGame(true);
     setIsHost(true);
   };
 
   const handleJoinGame = (gameId: string, playerName: string) => {
-    if (playerName.length < 1) {
-      console.log("player name must be at least 1 character");
-      return;
-    }
-
     socket.emit("game-join", gameId, CLIENT_ID, playerName);
     setHasJoinedGame(true);
   };
@@ -186,10 +176,7 @@ const App = () => {
               )}
             </div>
           ) : (
-            <Menu
-              handleCreateGame={handleCreateGame}
-              handleJoinGame={handleJoinGame}
-            />
+            <Menu onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} />
           )
         ) : (
           <Spinner />
