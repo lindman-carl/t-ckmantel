@@ -185,6 +185,7 @@ const App = () => {
                   game.players[CLIENT_ID].inGame
                 }
                 playerId={CLIENT_ID}
+                hasStarted={game.gameStarted}
                 handleVote={handleVote}
                 handleKick={handleKickPlayer}
               />

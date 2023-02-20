@@ -159,11 +159,12 @@ io.on("connection", (socket) => {
       };
     }
 
-    // set all players to inGame
+    // set all players to inGame and not voted
     for (const playerId of playerIds) {
       updatedPlayers[playerId] = {
         ...updatedPlayers[playerId],
         inGame: true,
+        hasVoted: false,
       };
     }
 
@@ -222,7 +223,10 @@ io.on("connection", (socket) => {
     // count votes
     const voteCount = Object.keys(updatedVotes).length;
 
-    const updatedPlayers = { ...game.players };
+    const updatedPlayers = {
+      ...game.players,
+      [playerId]: { ...game.players[playerId], hasVoted: true },
+    };
     let message = null;
     let gameOver = false;
 
@@ -287,9 +291,12 @@ io.on("connection", (socket) => {
           )}`;
           gameOver = true;
 
-          // give wins to commoners
+          // give wins to surviving commoners
           for (const playerId of Object.keys(updatedPlayers)) {
-            if (!updatedPlayers[playerId].isUndercover) {
+            if (
+              !updatedPlayers[playerId].isUndercover &&
+              updatedPlayers[playerId].inGame
+            ) {
               updatedPlayers[playerId] = {
                 ...updatedPlayers[playerId],
                 wins: updatedPlayers[playerId].wins + 1,
@@ -307,9 +314,12 @@ io.on("connection", (socket) => {
           )}`;
           gameOver = true;
 
-          // give wins to undercovers
+          // give wins to surviving undercovers
           for (const playerId of Object.keys(updatedPlayers)) {
-            if (updatedPlayers[playerId].isUndercover) {
+            if (
+              updatedPlayers[playerId].isUndercover &&
+              updatedPlayers[playerId].inGame
+            ) {
               updatedPlayers[playerId] = {
                 ...updatedPlayers[playerId],
                 wins: updatedPlayers[playerId].wins + 1,
@@ -330,6 +340,14 @@ io.on("connection", (socket) => {
 
       // increment round
       const round = game.round + 1;
+
+      // set all players to not have voted
+      for (const playerId of Object.keys(updatedPlayers)) {
+        updatedPlayers[playerId] = {
+          ...updatedPlayers[playerId],
+          hasVoted: false,
+        };
+      }
 
       // update game
       const updatedGame: Game = {
@@ -356,6 +374,7 @@ io.on("connection", (socket) => {
     const updatedGame: Game = {
       ...game,
       votes: updatedVotes,
+      players: updatedPlayers,
       currentVoteCount: voteCount,
     };
 

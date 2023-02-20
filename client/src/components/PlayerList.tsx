@@ -6,8 +6,25 @@ type Props = {
   canKick: boolean;
   canVote: boolean;
   playerId: string;
+  hasStarted: boolean;
   handleVote: (voteForId: string) => void;
   handleKick: (playerId: string) => void;
+};
+
+const getDesign = (inGame: boolean, hasStarted: boolean, hasVoted: boolean) => {
+  let base = "";
+  if (!inGame && hasStarted) {
+    base = "bg-rose-800 shadow-inner rounded-md text-rose-900 bg-opacity-50 ";
+  } else {
+    base = "bg-white shadow rounded-md text-sky-900";
+  }
+
+  let voteBorder = "";
+  if (hasVoted && inGame) {
+    voteBorder = "outline-green-600 outline outline-2 outline-offset-[-4px]";
+  }
+
+  return [base, voteBorder].join(" ");
 };
 
 const PlayerList = ({
@@ -17,6 +34,7 @@ const PlayerList = ({
   playerId,
   handleVote,
   handleKick,
+  hasStarted,
 }: Props) => {
   return (
     <div className="w-screen px-4 sm:w-96">
@@ -28,7 +46,11 @@ const PlayerList = ({
           {Object.entries(players).map(([id, player]) => (
             <div
               key={id}
-              className="grid h-10 w-full grid-cols-5 rounded-md bg-white px-4 font-medium text-sky-900 shadow"
+              className={`grid h-10 w-full grid-cols-5 px-4 font-medium ${getDesign(
+                player.inGame,
+                hasStarted,
+                player.hasVoted
+              )}`}
             >
               <div className="col-span-2 col-start-1 flex h-full items-center justify-start">
                 {player.name}

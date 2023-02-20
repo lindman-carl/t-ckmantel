@@ -28,6 +28,7 @@ export type Player = {
   isHost?: boolean;
   name: string;
   wins: number;
+  hasVoted: boolean;
 };
 
 export interface ServerToClientEvents {

@@ -50,6 +50,7 @@ export const createGame = (
         isHost: true,
         name: hostName,
         wins: 0,
+        hasVoted: false,
       },
     },
     round: 0,
@@ -97,6 +98,7 @@ export const addPlayerToGame = (
       inGame: false,
       name: playerName,
       wins: 0,
+      hasVoted: false,
     },
   };
 
