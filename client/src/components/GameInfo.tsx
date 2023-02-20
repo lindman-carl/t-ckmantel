@@ -21,7 +21,12 @@ const GameInfo = ({ game, isHost, children, onClickSettings }: Props) => {
               className="col-span-1 col-start-5 flex flex-row items-center justify-center drop-shadow"
               onClick={onClickSettings}
             >
-              <img src={CogSvg} alt="game settings" width="32px" />
+              <img
+                src={CogSvg}
+                alt="game settings"
+                width="32px"
+                height="32px"
+              />
             </button>
           )}
         </div>
