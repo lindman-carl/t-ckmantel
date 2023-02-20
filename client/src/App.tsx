@@ -185,22 +185,25 @@ const App = () => {
                 isHost={isHost}
                 onClickSettings={handleClickSettings}
               >
-                {isHost &&
-                  (game.gameStarted ? (
-                    game.gameOver ? (
+                {isHost && (
+                  <div className="mt-2">
+                    {game.gameStarted ? (
+                      game.gameOver ? (
+                        <Button
+                          onClick={() => handleStartGame(game.id)}
+                          label={"Restart game"}
+                        />
+                      ) : (
+                        <div>Game has started</div>
+                      )
+                    ) : (
                       <Button
                         onClick={() => handleStartGame(game.id)}
-                        label={"Restart game"}
+                        label={"Start game"}
                       />
-                    ) : (
-                      <div>Game has started</div>
-                    )
-                  ) : (
-                    <Button
-                      onClick={() => handleStartGame(game.id)}
-                      label={"Start game"}
-                    />
-                  ))}
+                    )}
+                  </div>
+                )}
               </GameInfo>
               <WordCard word={playerWord} />
               <PlayerList
