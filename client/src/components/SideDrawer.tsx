@@ -86,7 +86,7 @@ const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // stop body scroll when drawer is open
-  // document.body.style.overflow = open ? "hidden" : "unset";
+  document.body.style.overflow = open ? "hidden" : "unset";
 
   const handleSaveSettings = () => {
     if (gameMode === "custom") {
