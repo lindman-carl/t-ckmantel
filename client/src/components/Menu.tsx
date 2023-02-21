@@ -61,15 +61,22 @@ const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
 
   if (menuState === "main") {
     return (
-      <div className="flex flex-col items-center justify-center gap-y-4">
-        <Button
-          onClick={() => {
-            setMenuState("join");
-            setGameId("");
-          }}
-          label="Join Game"
-        />
-        <Button onClick={() => setMenuState("create")} label="Create Game" />
+      <div className="w-screen px-4 sm:w-96">
+        <div className="flex w-full flex-col items-stretch justify-center gap-y-2 rounded-md bg-rose-700 p-4 shadow-inner">
+          <div className="flex flex-col items-center justify-center gap-y-4">
+            <Button
+              onClick={() => {
+                setMenuState("join");
+                setGameId("");
+              }}
+              label="Join Game"
+            />
+            <Button
+              onClick={() => setMenuState("create")}
+              label="Create Game"
+            />
+          </div>
+        </div>
       </div>
     );
   }
