@@ -13,16 +13,19 @@ type WordInputProps = {
 const WordInput = ({ placeholder, value, onChange }: WordInputProps) => {
   const [hide, setHide] = useState(false);
   return (
-    <div className="flex w-full rounded-md bg-white shadow-inner">
+    <div className="grid w-full grid-cols-6 rounded-md bg-white shadow-inner">
       <input
         type={hide ? "password" : "text"}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-l-md py-2 pl-4 text-sky-900 outline-none"
+        className="col-span-5 col-start-1 rounded-l-md py-2 pl-4 text-sky-900 outline-none"
       />
       <div>
-        <button onClick={() => setHide(!hide)} className="ml-2 mt-2 ">
+        <button
+          onClick={() => setHide(!hide)}
+          className="col-span-1 col-start-6 ml-2 mt-2"
+        >
           {hide ? (
             <img src={EyeShowSvg} alt="show" width="24px" height="24px" />
           ) : (
