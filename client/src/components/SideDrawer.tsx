@@ -110,7 +110,7 @@ const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
 
   return (
     <Drawer open={open} direction="left" onClose={onClose} size={300}>
-      <div className="flex h-full flex-col items-center justify-start gap-y-4 overflow-y-scroll bg-slate-700 bg-black-scales py-4 text-white shadow-2xl">
+      <div className="flex h-full flex-col items-center justify-start gap-y-4 overflow-y-scroll bg-slate-700 bg-black-scales pb-32 pt-4 text-white shadow-2xl">
         <h2 className="py-4 text-center text-2xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
           Settings
         </h2>
