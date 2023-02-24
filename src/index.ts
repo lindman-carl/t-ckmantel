@@ -124,7 +124,7 @@ io.on("connection", (socket) => {
     socket.leave(gameId);
   });
 
-  socket.on("game-start", (gameId) => {
+  socket.on("game-start", (gameId, words, numUndercover) => {
     // get game
     const game = games.get(gameId);
     if (!game) {
@@ -139,7 +139,7 @@ io.on("connection", (socket) => {
 
     // get ids of first numUndercover players
     const undercoverPlayerIds = [];
-    for (let i = 0; i < game.numUndercover; i++) {
+    for (let i = 0; i < numUndercover; i++) {
       undercoverPlayerIds.push(playerIdsInRandomOrder[i]);
     }
 
@@ -168,8 +168,17 @@ io.on("connection", (socket) => {
       };
     }
 
-    // get random words
-    const randomWords = getRandomWords();
+    // set words
+    let wordsToUse;
+    if (words !== null) {
+      const shuffledWords = shuffleArray([...words]);
+      wordsToUse = {
+        undercover: shuffledWords[0],
+        common: shuffledWords[1],
+      };
+    } else {
+      wordsToUse = getRandomWords();
+    }
 
     // set who is the first player
     // rerandomize player order
@@ -189,13 +198,14 @@ io.on("connection", (socket) => {
       ...game,
       players: updatedPlayers,
       startPlayer,
-      words: randomWords,
+      words: wordsToUse,
       gameStarted: true,
       gameOver: false,
       round: 0,
       expectedVotes,
       votes: {},
       message,
+      numUndercover,
     };
 
     // update games map

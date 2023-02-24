@@ -142,12 +142,22 @@ const App = () => {
     });
   };
 
-  const handleStartGame = (gameId: string) => {
+  const handleStartGame = (
+    words: [string, string] | null,
+    numUndercover: number
+  ) => {
     if (!isHost) {
       console.log("only the host can start the game");
       return;
     }
-    socket.emit("game-start", gameId);
+
+    if (!game) {
+      console.log("no game object");
+      return;
+    }
+
+    socket.emit("game-start", game.id, words, numUndercover);
+    setDrawerIsOpen(false);
   };
 
   const handleVote = (voteForId: string) => {
@@ -168,22 +178,6 @@ const App = () => {
     }
   };
 
-  const handleClickSettings = () => {
-    console.log("opening settings");
-    setDrawerIsOpen(!drawerIsOpen);
-  };
-
-  const handleSaveSettings = (
-    gameMode: string,
-    word1: string,
-    word2: string
-  ) => {
-    console.log("saving settings");
-    console.log(gameMode, word1, word2);
-
-    setDrawerIsOpen(false);
-  };
-
   return (
     <>
       <div className="flex h-screen w-screen flex-col items-center justify-start text-lg text-white">
@@ -194,23 +188,23 @@ const App = () => {
               <GameInfo
                 game={game}
                 isHost={isHost}
-                onClickSettings={handleClickSettings}
+                onClickSettings={() => console.log("todo: implement settings")}
               >
                 {isHost && (
                   <div className="mt-2">
                     {game.gameStarted ? (
                       game.gameOver ? (
                         <Button
-                          onClick={() => handleStartGame(game.id)}
-                          label={"Restart game"}
+                          onClick={() => setDrawerIsOpen(true)}
+                          label={"Play2"}
                         />
                       ) : (
                         <div>Game has started</div>
                       )
                     ) : (
                       <Button
-                        onClick={() => handleStartGame(game.id)}
-                        label={"Start game"}
+                        onClick={() => setDrawerIsOpen(true)}
+                        label={"Play"}
                       />
                     )}
                   </div>
@@ -250,7 +244,7 @@ const App = () => {
       <SideDrawer
         open={drawerIsOpen}
         onClose={() => setDrawerIsOpen(false)}
-        onSaveSettings={handleSaveSettings}
+        onStartGame={handleStartGame}
       />
     </>
   );

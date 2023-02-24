@@ -10,7 +10,7 @@ import { z } from "zod";
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSaveSettings: (gameMode: string, word1: string, word2: string) => void;
+  onStartGame: (words: [string, string] | null, numUndercover: number) => void;
 };
 
 type GameModeSettingsProps = {
@@ -63,21 +63,24 @@ const WordsSettingsComponent = ({
       </h3>
       <div className="flex flex-col gap-y-2">
         <WordInput
-          placeholder="word 1"
+          placeholder="first word"
           value={firstWord}
           onChange={setFirstWord}
         />
         <WordInput
-          placeholder="word 2"
+          placeholder="second word"
           value={secondWord}
           onChange={setSecondWord}
         />
+        <span className="mt-1 px-2 text-center text-sm font-light">
+          Which word is undercover is randomly chosen
+        </span>
       </div>
     </div>
   </div>
 );
 
-const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
+const SideDrawer = ({ open, onClose, onStartGame }: Props) => {
   const [gameMode, setGameMode] = useState<"random" | "custom">("random");
   const [firstWord, setFirstWord] = useState("");
   const [secondWord, setSecondWord] = useState("");
@@ -88,20 +91,45 @@ const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
   // stop body scroll when drawer is open
   document.body.style.overflow = open ? "hidden" : "unset";
 
-  const handleSaveSettings = () => {
+  const handleStartGame = () => {
+    const maxUndercovers = 5;
+    const numUndercoverSchema = z
+      .number()
+      .min(1, { message: "Undercovers: Must be at least 1" })
+      .max(maxUndercovers, {
+        message: `Undercovers: Must be at most ${maxUndercovers}`,
+      });
+    const wordSchema = z
+      .string()
+      .min(1, { message: "Both words must contain at least 1 character" })
+      .max(30, { message: "Both words must contain at most 30 characters" });
+
     if (gameMode === "custom") {
-      // validate words with zod
-      const wordSchema = z
-        .string()
-        .min(1, { message: "Both words must contain at least 1 character" })
-        .max(30, { message: "Both words must contain at most 30 characters" });
       try {
+        // parse input with zod
         wordSchema.parse(firstWord);
         wordSchema.parse(secondWord);
-        onSaveSettings(gameMode, firstWord, secondWord);
+        numUndercoverSchema.parse(numUndercover);
+
+        // no errors, start game
+        onStartGame([firstWord, secondWord], numUndercover);
         setErrorMessage(null);
       } catch (error) {
         if (error instanceof z.ZodError) {
+          // only show first error message
+          setErrorMessage(error.issues[0].message);
+        }
+      }
+    } else if (gameMode === "random") {
+      try {
+        // parse input with zod
+        numUndercoverSchema.parse(numUndercover);
+
+        // no errors, start game
+        onStartGame(null, numUndercover);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          // only show first error message
           setErrorMessage(error.issues[0].message);
         }
       }
@@ -112,7 +140,7 @@ const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
     <Drawer open={open} direction="left" onClose={onClose} size={300}>
       <div className="flex h-full flex-col items-center justify-start gap-y-4 overflow-y-scroll bg-slate-700 bg-black-scales pb-32 pt-4 text-white shadow-2xl">
         <h2 className="py-4 text-center text-2xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
-          Settings
+          Game Settings
         </h2>
         <GameModeSettingsComponent
           gameMode={gameMode}
@@ -154,19 +182,12 @@ const SideDrawer = ({ open, onClose, onSaveSettings }: Props) => {
             </div>
           </div>
         </div>
-        <span className="text-sm font-light">
-          Changes will take effect next game
-        </span>
         {errorMessage && (
           <span className="px-4 text-center text-sm font-light text-red-600">
             {errorMessage}
           </span>
         )}
-        <Button
-          label="Save settings"
-          onClick={handleSaveSettings}
-          alternative
-        />
+        <Button label="Start game" onClick={handleStartGame} alternative />
       </div>
     </Drawer>
   );

@@ -52,7 +52,11 @@ export interface ClientToServerEvents {
     callback: (success: boolean) => void
   ) => void;
   "game-kick": (gameId: string, playerId: string, hostId: string) => void;
-  "game-start": (gameId: string) => void;
+  "game-start": (
+    gameId: string,
+    words: [string, string] | null,
+    numUndercover: number
+  ) => void;
   "game-vote": (gameId: string, playerId: string, voteForId: string) => void;
   "room-leave": (gameId: string) => void;
 }
