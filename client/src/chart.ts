@@ -136,7 +136,8 @@ export const drawChart = (game: Game) => {
     .ribbonArrow()
     .headRadius(45)
     .radius(innerRadius)
-    .padAngle(0);
+    .padAngle(0)
+    .targetRadius(innerRadius);
 
   // arc
   const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
@@ -149,7 +150,7 @@ export const drawChart = (game: Game) => {
     .sortChords(d3.descending)(matrix);
 
   // clear old chart
-  d3.select("#my_dataviz").selectAll("svg").remove();
+  d3.select("#chord_chart").selectAll("svg").remove();
 
   // create new chart
   const svg = d3

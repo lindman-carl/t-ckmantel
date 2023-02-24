@@ -37,46 +37,43 @@ const PlayerList = ({
   hasStarted,
 }: Props) => {
   return (
-    <div className="w-screen px-4 sm:w-96">
-      <div className="flex w-full flex-col items-stretch justify-center rounded-md bg-rose-700 p-4 shadow-inner">
-        <h3 className="mb-2 text-center text-xl font-semibold text-white underline decoration-rose-900 decoration-2 underline-offset-2 drop-shadow">
-          Players
-        </h3>
-        <div className="flex flex-col items-center justify-center gap-y-2">
-          {Object.entries(players).map(([id, player]) => (
-            <div
-              key={id}
-              className={`grid h-10 w-full grid-cols-5 px-4 font-medium ${getDesign(
-                player.inGame,
-                hasStarted,
-                player.hasVoted
-              )}`}
-            >
-              <div className="col-span-2 col-start-1 flex h-full items-center justify-start">
-                {player.name}
-              </div>
-              {player.wins > 0 && (
-                <div className="col-span-1 col-start-3 flex h-full items-center justify-end">
-                  {player.wins > 1 && <span>{player.wins}x</span>}
-                  <img src={MedalSvg} alt="medal" width="24px" height="24px" />
-                </div>
-              )}
-              {canKick && id !== playerId && (
-                <div className="col-span-1 col-start-5 flex h-full items-center justify-end">
-                  <button onClick={() => handleKick(id)}>Kick</button>
-                </div>
-              )}
-              {player.inGame && canVote && id !== playerId && (
-                <div className="col-span-2 col-start-4 flex h-full items-center justify-end">
-                  <button onClick={() => handleVote(id)}>Vote for</button>
-                </div>
-              )}
+    <div className="flex flex-col items-center justify-center gap-y-2">
+      {Object.entries(players).map(([id, player]) => (
+        <div
+          key={id}
+          className={`grid h-10 w-full grid-cols-5 px-4 font-medium ${getDesign(
+            player.inGame,
+            hasStarted,
+            player.hasVoted
+          )}`}
+        >
+          <div className="col-span-2 col-start-1 flex h-full items-center justify-start">
+            {player.name}
+          </div>
+          {player.wins > 0 && (
+            <div className="col-span-1 col-start-3 flex h-full items-center justify-end">
+              {player.wins > 1 && <span>{player.wins}x</span>}
+              <img src={MedalSvg} alt="medal" width="24px" height="24px" />
             </div>
-          ))}
+          )}
+          {canKick && id !== playerId && (
+            <div className="col-span-1 col-start-5 flex h-full items-center justify-end">
+              <button onClick={() => handleKick(id)}>Kick</button>
+            </div>
+          )}
+          {player.inGame && canVote && id !== playerId && (
+            <div className="col-span-2 col-start-4 flex h-full items-center justify-end">
+              <button onClick={() => handleVote(id)}>Vote for</button>
+            </div>
+          )}
         </div>
-      </div>
+      ))}
     </div>
   );
 };
 
 export default PlayerList;
+
+/* <h3 className="mb-2 text-center text-xl font-semibold text-white underline decoration-rose-900 decoration-2 underline-offset-2 drop-shadow">
+          Players
+        </h3> */

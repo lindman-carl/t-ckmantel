@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-    @apply bg-rose-600 bg-checkered-pattern ;
+    @apply bg-rose-600 bg-checkered-pattern overflow-x-hidden;
 }
 
 .flip {

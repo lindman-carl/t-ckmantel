@@ -13,6 +13,8 @@ import WordCard from "./components/WordCard";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types";
 import { getClientId } from "./utils";
 import { drawChart } from "./chart";
+import GameInfo from "./components/GameInfo";
+import GameStats from "./components/GameStats";
 
 const CLIENT_ID = getClientId();
 
@@ -40,6 +42,9 @@ const App = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [drawerIsOpen, setDrawerIsOpen] = useState(false);
+  const [currentGameInfoPage, setCurrentGameInfoPage] = useState<
+    "players" | "stats"
+  >("players");
 
   useEffect(() => {
     console.log("client id", CLIENT_ID);
@@ -117,8 +122,9 @@ const App = () => {
   useEffect(() => {
     // re draw chord chart on updated chord data
     if (!game) return;
+    console.log("yolo");
     drawChart(game);
-  }, [game?.chordData]);
+  }, [game?.chordData, currentGameInfoPage]);
 
   useEffect(() => {
     if (game && game.message !== null) {
@@ -219,20 +225,28 @@ const App = () => {
                 )}
               </GameHeader>
               <WordCard word={playerWord} />
-              <PlayerList
-                players={game.players}
-                canKick={isHost && !game.gameStarted}
-                canVote={
-                  game.gameStarted &&
-                  !hasVoted &&
-                  !game.gameOver &&
-                  game.players[CLIENT_ID].inGame
-                }
-                playerId={CLIENT_ID}
-                hasStarted={game.gameStarted}
-                handleVote={handleVote}
-                handleKick={handleKickPlayer}
-              />
+              <GameInfo
+                setPage={setCurrentGameInfoPage}
+                currentPage={currentGameInfoPage}
+              >
+                {currentGameInfoPage === "players" && (
+                  <PlayerList
+                    players={game.players}
+                    canKick={isHost && !game.gameStarted}
+                    canVote={
+                      game.gameStarted &&
+                      !hasVoted &&
+                      !game.gameOver &&
+                      game.players[CLIENT_ID].inGame
+                    }
+                    playerId={CLIENT_ID}
+                    hasStarted={game.gameStarted}
+                    handleVote={handleVote}
+                    handleKick={handleKickPlayer}
+                  />
+                )}
+                {currentGameInfoPage === "stats" && <GameStats />}
+              </GameInfo>
             </div>
           ) : (
             <Menu onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} />
