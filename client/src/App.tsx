@@ -70,7 +70,8 @@ const App = () => {
       }
 
       // set vote status
-      if (game.votes.hasOwnProperty(CLIENT_ID)) {
+      // get latest votes
+      if (game.votes[0].hasOwnProperty(CLIENT_ID)) {
         setHasVoted(true);
       }
     });

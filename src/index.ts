@@ -185,12 +185,6 @@ io.on("connection", (socket) => {
     playerIdsInRandomOrder = shuffleArray([...playerIds]);
     const startPlayer = playerIdsInRandomOrder[0];
 
-    // count expected votes
-    const expectedVotes = Object.values(updatedPlayers).reduce(
-      (acc, player) => acc + (player.inGame ? 1 : 0),
-      0
-    );
-
     const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
 
     // update game
@@ -202,8 +196,6 @@ io.on("connection", (socket) => {
       gameStarted: true,
       gameOver: false,
       round: 0,
-      expectedVotes,
-      votes: {},
       message,
       numUndercover,
     };
@@ -227,11 +219,21 @@ io.on("connection", (socket) => {
     }
 
     // update votes
-    const updatedVotes = { ...game.votes };
-    updatedVotes[playerId] = voteForId;
+    const currentVotesObject = game.votes[0];
+    const updatedVotesObject = { ...currentVotesObject };
+    updatedVotesObject[playerId] = voteForId;
+    const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
 
     // count votes
-    const voteCount = Object.keys(updatedVotes).length;
+    const voteCount = Object.keys(updatedVotesObject).length;
+
+    const expectedVoteCount = Object.values(game.players).reduce(
+      (acc, player) => acc + (player.inGame ? 1 : 0),
+      0
+    );
+
+    console.log("expected vote count", expectedVoteCount);
+    console.log("vote count", voteCount);
 
     const updatedPlayers = {
       ...game.players,
@@ -241,9 +243,9 @@ io.on("connection", (socket) => {
     let gameOver = false;
 
     // end round if all votes are in
-    if (voteCount === game.expectedVotes) {
+    if (voteCount === expectedVoteCount) {
       // count votes for each player
-      const voteCounts = Object.values(updatedVotes).reduce(
+      const voteCounts = Object.values(updatedVotesObject).reduce(
         (acc, voteForId) => {
           if (acc[voteForId]) {
             acc[voteForId]++;
@@ -342,12 +344,6 @@ io.on("connection", (socket) => {
         message = "there was a tie, no one was eliminated";
       }
 
-      // count expected votes for next round
-      const expectedVotes = Object.values(updatedPlayers).reduce(
-        (acc, player) => acc + (player.inGame ? 1 : 0),
-        0
-      );
-
       // increment round
       const round = game.round + 1;
 
@@ -359,20 +355,23 @@ io.on("connection", (socket) => {
         };
       }
 
+      // new round, make new votes object in the beginning of the votes array
+      updatedVotes.unshift({});
+
       // update game
       const updatedGame: Game = {
         ...game,
-        votes: {},
-        expectedVotes,
+        votes: updatedVotes,
         round,
         players: updatedPlayers,
         message,
-        currentVoteCount: 0,
         gameOver,
       };
 
       // update games map
       games.set(gameId, updatedGame);
+
+      console.log(updatedVotes);
 
       // emit game update
       io.to(gameId).emit("game-update", updatedGame);
@@ -385,7 +384,6 @@ io.on("connection", (socket) => {
       ...game,
       votes: updatedVotes,
       players: updatedPlayers,
-      currentVoteCount: voteCount,
     };
 
     // update games map

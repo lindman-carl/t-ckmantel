@@ -13,11 +13,7 @@ export type Game = {
     undercover: string;
     common: string;
   };
-  votes: {
-    [id: string]: string;
-  };
-  expectedVotes: number;
-  currentVoteCount: number;
+  votes: { [id: string]: string }[];
   allowVote: boolean;
   message: string | null;
 };
