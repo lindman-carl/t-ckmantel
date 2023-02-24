@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 // local imports
-import { getRandomWords, log, shuffleArray } from "./utils.js";
+import { generateChordData, getRandomWords, log, shuffleArray, } from "./utils.js";
 import { addPlayerToGame, createGame, logAllGames, games, playersInGame, logGame, removePlayerFromGame, } from "./game.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
@@ -280,6 +280,8 @@ io.on("connection", (socket) => {
                     hasVoted: false,
                 };
             }
+            // generate a new chord matrix
+            const chordData = generateChordData(updatedVotes);
             // new round, make new votes object in the beginning of the votes array
             updatedVotes.unshift({});
             // update game
@@ -290,6 +292,7 @@ io.on("connection", (socket) => {
                 players: updatedPlayers,
                 message,
                 gameOver,
+                chordData,
             };
             // update games map
             games.set(gameId, updatedGame);
