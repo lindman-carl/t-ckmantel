@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import Button from "./components/Button";
-import GameInfo from "./components/GameInfo";
+import GameHeader from "./components/GameHeader";
 import Logo from "./components/Logo";
 import Menu from "./components/Menu";
 import Modal from "./components/Modal";
@@ -12,6 +12,7 @@ import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types";
 import { getClientId } from "./utils";
+import { drawChart } from "./chart";
 
 const CLIENT_ID = getClientId();
 
@@ -114,6 +115,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    // re draw chord chart on updated chord data
+    if (!game) return;
+    drawChart(game);
+  }, [game?.chordData]);
+
+  useEffect(() => {
     if (game && game.message !== null) {
       setShowModal(true);
     }
@@ -186,7 +193,7 @@ const App = () => {
         {isConnected ? (
           hasJoinedGame && game ? (
             <div className="flex flex-col items-center gap-y-4">
-              <GameInfo
+              <GameHeader
                 game={game}
                 isHost={isHost}
                 onClickSettings={() => console.log("todo: implement settings")}
@@ -210,7 +217,7 @@ const App = () => {
                     )}
                   </div>
                 )}
-              </GameInfo>
+              </GameHeader>
               <WordCard word={playerWord} />
               <PlayerList
                 players={game.players}

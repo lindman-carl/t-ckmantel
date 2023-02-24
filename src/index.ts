@@ -6,7 +6,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // local imports
-import { getRandomWords, log, shuffleArray } from "./utils.js";
+import {
+  generateChordData,
+  getRandomWords,
+  log,
+  shuffleArray,
+} from "./utils.js";
 import {
   addPlayerToGame,
   createGame,
@@ -355,6 +360,9 @@ io.on("connection", (socket) => {
         };
       }
 
+      // generate a new chord matrix
+      const chordData = generateChordData(updatedVotes);
+
       // new round, make new votes object in the beginning of the votes array
       updatedVotes.unshift({});
 
@@ -366,6 +374,7 @@ io.on("connection", (socket) => {
         players: updatedPlayers,
         message,
         gameOver,
+        chordData,
       };
 
       // update games map

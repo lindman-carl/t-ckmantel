@@ -62,3 +62,89 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 
   return array;
 };
+
+export const generateChordMatrix = (votes: { [id: string]: string }[]) => {
+  // creates a matrix of votes
+  // for use with d3-chord
+  // [
+  //   [0, 1, 0, 0],
+  //   [1, 0, 0, 0],
+  //   [0, 0, 0, 1],
+  //   [0, 0, 1, 0],
+  // ]
+  // where the rows and columns are ordered by playerId
+  // and the value at [i][j] is the number of votes from playerId i to playerId j
+
+  const matrix: number[][] = [];
+  const voteCountsPerPlayer: { [id: string]: { [voteForId: string]: number } } =
+    {};
+
+  // Count votes
+  votes.forEach((vote) => {
+    // Count votes by each player
+    Object.keys(vote).forEach((playerId) => {
+      const voteForId = vote[playerId];
+      if (!voteCountsPerPlayer[playerId]) {
+        voteCountsPerPlayer[playerId] = {};
+      }
+      if (!voteCountsPerPlayer[playerId][voteForId]) {
+        voteCountsPerPlayer[playerId][voteForId] = 0;
+      }
+      voteCountsPerPlayer[playerId][voteForId]++;
+    });
+  });
+
+  console.log(voteCountsPerPlayer);
+
+  // Create matrix
+  const playerIds = Object.keys(voteCountsPerPlayer);
+  playerIds.forEach((playerId) => {
+    const voteCounts = voteCountsPerPlayer[playerId];
+    const row: number[] = [];
+    playerIds.forEach((otherPlayerId) => {
+      const voteCount = voteCounts[otherPlayerId] || 0;
+      row.push(voteCount);
+    });
+    matrix.push(row);
+  });
+
+  console.log(matrix);
+  return matrix;
+};
+
+export const generateChordData = (votes: { [id: string]: string }[]) => {
+  const data: { source: string; target: string; value: number }[] = [];
+  const voteCountsPerPlayer: { [id: string]: { [voteForId: string]: number } } =
+    {};
+
+  // Count votes
+  votes.forEach((voteObject) => {
+    // Count votes by each player
+    Object.keys(voteObject).forEach((playerId) => {
+      const voteForId = voteObject[playerId];
+      if (!voteCountsPerPlayer[playerId]) {
+        voteCountsPerPlayer[playerId] = {};
+      }
+      if (!voteCountsPerPlayer[playerId][voteForId]) {
+        voteCountsPerPlayer[playerId][voteForId] = 0;
+      }
+      voteCountsPerPlayer[playerId][voteForId]++;
+    });
+  });
+
+  console.log(voteCountsPerPlayer);
+
+  // Create data
+  Object.entries(voteCountsPerPlayer).forEach(([playerId, voteCounts]) => {
+    Object.entries(voteCounts).forEach(([voteForId, voteCount]) => {
+      data.push({
+        source: playerId,
+        target: voteForId,
+        value: voteCount,
+      });
+    });
+  });
+
+  console.log(data);
+  return data;
+};
