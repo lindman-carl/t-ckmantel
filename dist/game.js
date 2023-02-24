@@ -50,10 +50,8 @@ export const createGame = (gameId, hostId, hostName) => {
             common: "common",
         },
         startPlayer: null,
-        votes: {},
+        votes: [{}],
         allowVote: false,
-        expectedVotes: 0,
-        currentVoteCount: 0,
         message: null,
     };
     games.set(gameId, game);
@@ -80,17 +78,22 @@ export const addPlayerToGame = (gameId, playerId, playerName) => {
             hasVoted: false,
         },
     };
-    const newVotes = { ...game.votes };
-    if (newVotes[playerId]) {
-        delete newVotes[playerId];
-    }
-    const newVoteCount = Object.keys(newVotes).length;
+    // i dont think this is needed
+    // const newVotes = { ...game.votes[0] };
+    // if (newVotes[playerId]) {
+    //   delete newVotes[playerId];
+    // }
+    // const newVoteCount = Object.keys(newVotes).length;
+    // const updatedGame: Game = {
+    //   ...game,
+    //   players: newPlayers,
+    //   expectedVotes: Object.keys(newPlayers).length - 1,
+    //   votes: newVotes,
+    //   currentVoteCount: newVoteCount,
+    // };
     const updatedGame = {
         ...game,
         players: newPlayers,
-        expectedVotes: Object.keys(newPlayers).length - 1,
-        votes: newVotes,
-        currentVoteCount: newVoteCount,
     };
     // update game in games map
     games.set(game.id, updatedGame);

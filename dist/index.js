@@ -93,7 +93,7 @@ io.on("connection", (socket) => {
     socket.on("room-leave", (gameId) => {
         socket.leave(gameId);
     });
-    socket.on("game-start", (gameId) => {
+    socket.on("game-start", (gameId, words, numUndercover) => {
         // get game
         const game = games.get(gameId);
         if (!game) {
@@ -106,7 +106,7 @@ io.on("connection", (socket) => {
         let playerIdsInRandomOrder = shuffleArray([...playerIds]);
         // get ids of first numUndercover players
         const undercoverPlayerIds = [];
-        for (let i = 0; i < game.numUndercover; i++) {
+        for (let i = 0; i < numUndercover; i++) {
             undercoverPlayerIds.push(playerIdsInRandomOrder[i]);
         }
         // reset all players to not undercover
@@ -132,27 +132,34 @@ io.on("connection", (socket) => {
                 hasVoted: false,
             };
         }
-        // get random words
-        const randomWords = getRandomWords();
+        // set words
+        let wordsToUse;
+        if (words !== null) {
+            const shuffledWords = shuffleArray([...words]);
+            wordsToUse = {
+                undercover: shuffledWords[0],
+                common: shuffledWords[1],
+            };
+        }
+        else {
+            wordsToUse = getRandomWords();
+        }
         // set who is the first player
         // rerandomize player order
         playerIdsInRandomOrder = shuffleArray([...playerIds]);
         const startPlayer = playerIdsInRandomOrder[0];
-        // count expected votes
-        const expectedVotes = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
         const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
         // update game
         const updatedGame = {
             ...game,
             players: updatedPlayers,
             startPlayer,
-            words: randomWords,
+            words: wordsToUse,
             gameStarted: true,
             gameOver: false,
             round: 0,
-            expectedVotes,
-            votes: {},
             message,
+            numUndercover,
         };
         // update games map
         games.set(gameId, updatedGame);
@@ -169,10 +176,15 @@ io.on("connection", (socket) => {
             return;
         }
         // update votes
-        const updatedVotes = { ...game.votes };
-        updatedVotes[playerId] = voteForId;
+        const currentVotesObject = game.votes[0];
+        const updatedVotesObject = { ...currentVotesObject };
+        updatedVotesObject[playerId] = voteForId;
+        const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
         // count votes
-        const voteCount = Object.keys(updatedVotes).length;
+        const voteCount = Object.keys(updatedVotesObject).length;
+        const expectedVoteCount = Object.values(game.players).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
+        console.log("expected vote count", expectedVoteCount);
+        console.log("vote count", voteCount);
         const updatedPlayers = {
             ...game.players,
             [playerId]: { ...game.players[playerId], hasVoted: true },
@@ -180,9 +192,9 @@ io.on("connection", (socket) => {
         let message = null;
         let gameOver = false;
         // end round if all votes are in
-        if (voteCount === game.expectedVotes) {
+        if (voteCount === expectedVoteCount) {
             // count votes for each player
-            const voteCounts = Object.values(updatedVotes).reduce((acc, voteForId) => {
+            const voteCounts = Object.values(updatedVotesObject).reduce((acc, voteForId) => {
                 if (acc[voteForId]) {
                     acc[voteForId]++;
                 }
@@ -259,8 +271,6 @@ io.on("connection", (socket) => {
                 // if there is a tie, no one is eliminated
                 message = "there was a tie, no one was eliminated";
             }
-            // count expected votes for next round
-            const expectedVotes = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
             // increment round
             const round = game.round + 1;
             // set all players to not have voted
@@ -270,19 +280,20 @@ io.on("connection", (socket) => {
                     hasVoted: false,
                 };
             }
+            // new round, make new votes object in the beginning of the votes array
+            updatedVotes.unshift({});
             // update game
             const updatedGame = {
                 ...game,
-                votes: {},
-                expectedVotes,
+                votes: updatedVotes,
                 round,
                 players: updatedPlayers,
                 message,
-                currentVoteCount: 0,
                 gameOver,
             };
             // update games map
             games.set(gameId, updatedGame);
+            console.log(updatedVotes);
             // emit game update
             io.to(gameId).emit("game-update", updatedGame);
             io.to(gameId).emit("game-round-new");
@@ -293,7 +304,6 @@ io.on("connection", (socket) => {
             ...game,
             votes: updatedVotes,
             players: updatedPlayers,
-            currentVoteCount: voteCount,
         };
         // update games map
         games.set(gameId, updatedGame);
