@@ -6,12 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // local imports
-import {
-  generateChordData,
-  getRandomWords,
-  log,
-  shuffleArray,
-} from "./utils.js";
+import { generateChordData, log } from "./utils.js";
 import {
   addPlayerToGame,
   createGame,
@@ -20,6 +15,7 @@ import {
   playersInGame,
   logGame,
   removePlayerFromGame,
+  gameStart,
 } from "./game.js";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
 
@@ -130,87 +126,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("game-start", (gameId, words, numUndercover) => {
-    // get game
-    const game = games.get(gameId);
-    if (!game) {
-      console.log("could not find game");
+    const updatedGame = gameStart(gameId, words, numUndercover);
+    if (!updatedGame) {
+      console.log("could not start game");
       return;
     }
-
-    // set who is undercover
-    // get random order of players
-    const playerIds = Object.keys(game.players);
-    let playerIdsInRandomOrder = shuffleArray([...playerIds]);
-
-    // get ids of first numUndercover players
-    const undercoverPlayerIds = [];
-    for (let i = 0; i < numUndercover; i++) {
-      undercoverPlayerIds.push(playerIdsInRandomOrder[i]);
-    }
-
-    // reset all players to not undercover
-    // then set undercover players to undercover
-    const updatedPlayers = { ...game.players };
-    for (const playerId of playerIds) {
-      updatedPlayers[playerId] = {
-        ...updatedPlayers[playerId],
-        isUndercover: false,
-      };
-    }
-    for (const playerId of undercoverPlayerIds) {
-      updatedPlayers[playerId] = {
-        ...updatedPlayers[playerId],
-        isUndercover: true,
-      };
-    }
-
-    // set all players to inGame and not voted
-    for (const playerId of playerIds) {
-      updatedPlayers[playerId] = {
-        ...updatedPlayers[playerId],
-        inGame: true,
-        hasVoted: false,
-      };
-    }
-
-    // set words
-    let wordsToUse;
-    if (words !== null) {
-      const shuffledWords = shuffleArray([...words]);
-      wordsToUse = {
-        undercover: shuffledWords[0],
-        common: shuffledWords[1],
-      };
-    } else {
-      wordsToUse = getRandomWords();
-    }
-
-    // set who is the first player
-    // rerandomize player order
-    playerIdsInRandomOrder = shuffleArray([...playerIds]);
-    const startPlayer = playerIdsInRandomOrder[0];
-
-    const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
-
-    // update game
-    const updatedGame: Game = {
-      ...game,
-      players: updatedPlayers,
-      startPlayer,
-      words: wordsToUse,
-      gameStarted: true,
-      gameOver: false,
-      round: 0,
-      message,
-      numUndercover,
-    };
-
-    // update games map
-    games.set(gameId, updatedGame);
 
     // emit game update
     io.to(gameId).emit("game-update", updatedGame);
 
+    // log game
     log("game", `game ${gameId} started`);
     logGame(gameId);
   });
