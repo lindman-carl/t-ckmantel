@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { Game } from "./types.js";
 import { getRandomWords, log, shuffleArray } from "./utils.js";
 
@@ -39,22 +41,44 @@ export const gameCreate = (
 ): Game | null => {
   // create a new game with id and default values
   // and add it to the games map
+  const trimmedGameId = gameId.trim();
+  const trimmedHostName = hostName.trim();
+
+  // validate input with zod
+  const gameIdSchema = z
+    .string()
+    .min(4, { message: "Game id: min 4 characters long" })
+    .max(20, { message: "Game id: max 20 charactes long" });
+  const playerNameSchema = z
+    .string()
+    .min(1, { message: "Player name: min 1 character" })
+    .max(12, { message: "Player name: max 12 characters" });
+
+  try {
+    gameIdSchema.parse(trimmedGameId);
+    playerNameSchema.parse(trimmedHostName);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      log("game", err.issues[0].message);
+      return null;
+    }
+  }
 
   // check if game already exists
-  if (games.has(gameId)) {
-    log("game", `game ${gameId} already exists`);
+  if (games.has(trimmedGameId)) {
+    log("game", `game ${trimmedGameId} already exists`);
     return null;
   }
 
   const game: Game = {
-    id: gameId,
+    id: trimmedGameId,
     host: hostId,
     players: {
       [hostId]: {
         isUndercover: false,
         inGame: false,
         isHost: true,
-        name: hostName,
+        name: trimmedHostName,
         wins: 0,
         hasVoted: false,
       },
@@ -73,10 +97,10 @@ export const gameCreate = (
     message: null,
   };
 
-  games.set(gameId, game);
+  games.set(trimmedGameId, game);
 
   // add player to playersInGame map
-  playersInGame.set(hostId, gameId);
+  playersInGame.set(hostId, trimmedGameId);
   return game;
 };
 
