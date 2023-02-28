@@ -90,7 +90,7 @@ describe("gameCreate", () => {
 
     gameIds.forEach((gameId) => {
       const hostId = `${gameId}hostId`;
-      const hostName = `${gameId}hostName`;
+      const hostName = `${gameId}hName`;
 
       const game = gameCreate(gameId, hostId, hostName);
 
@@ -110,6 +110,45 @@ describe("gameCreate", () => {
 
     // expect the number of players to be in the playersInGame map
     expect(playersInGame.size).toBe(numGames);
+  });
+
+  test("should not create a game with invalid game id", () => {
+    const invalidGameIds = ["", " ", "1", "123"];
+
+    invalidGameIds.forEach((gameId) => {
+      const hostId = "hostId";
+      const hostName = "hostName";
+
+      const game = gameCreate(gameId, hostId, hostName);
+
+      // expect the game to be null
+      expect(game).toBeNull();
+
+      // expect the games map to be empty
+      expect(games.size).toBe(0);
+
+      // expect the playersInGame map to be empty
+      expect(playersInGame.size).toBe(0);
+    });
+  });
+
+  test("should not create a game with invalid host name", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const invalidHostNames = ["", " ", "reallyLongName"];
+
+    invalidHostNames.forEach((hostName) => {
+      const game = gameCreate(gameId, hostId, hostName);
+
+      // expect the game to be null
+      expect(game).toBeNull();
+
+      // expect the games map to be empty
+      expect(games.size).toBe(0);
+
+      // expect the playersInGame map to be empty
+      expect(playersInGame.size).toBe(0);
+    });
   });
 });
 
