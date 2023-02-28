@@ -87,6 +87,13 @@ export const gameAddPlayer = (
 ): Game | null => {
   // add player to game object by id
 
+  // check if player is already in game
+  if (playersInGame.has(playerId)) {
+    log("game", `player ${playerId} already in game`);
+    return null;
+  }
+
+  // check if game exists
   // get game from games map
   const game = games.get(gameId);
   if (!game) {
