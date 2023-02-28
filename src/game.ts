@@ -32,7 +32,7 @@ export const logAllGames = (): void => {
   });
 };
 
-export const createGame = (
+export const gameCreate = (
   gameId: string,
   hostId: string,
   hostName: string
@@ -74,7 +74,7 @@ export const createGame = (
   return game;
 };
 
-export const addPlayerToGame = (
+export const gameAddPlayer = (
   gameId: string,
   playerId: string,
   playerName: string
@@ -117,7 +117,7 @@ export const addPlayerToGame = (
   return updatedGame;
 };
 
-export const removePlayerFromGame = (
+export const gameRemovePlayer = (
   gameId: string,
   playerId: string
 ): Game | null => {

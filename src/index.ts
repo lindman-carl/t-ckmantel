@@ -8,13 +8,13 @@ import { fileURLToPath } from "url";
 // local imports
 import { generateChordData, log } from "./utils.js";
 import {
-  addPlayerToGame,
-  createGame,
+  gameAddPlayer,
+  gameCreate,
   logAllGames,
   games,
   playersInGame,
   logGame,
-  removePlayerFromGame,
+  gameRemovePlayer,
   gameStart,
 } from "./game.js";
 import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("game-create", (gameId, hostId, hostName, callback) => {
-    const game = createGame(gameId, hostId, hostName);
+    const game = gameCreate(gameId, hostId, hostName);
     if (!game) {
       console.log("could not create game");
       callback(false);
@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("game-join", (gameId, playerId, playerName, callback) => {
-    const game = addPlayerToGame(gameId, playerId, playerName);
+    const game = gameAddPlayer(gameId, playerId, playerName);
     if (!game) {
       console.log("could not join game");
       callback(false);
@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
     }
 
     // remove player from game
-    const updatedGame = removePlayerFromGame(gameId, playerId);
+    const updatedGame = gameRemovePlayer(gameId, playerId);
 
     if (!updatedGame) {
       console.log("failed to kick player", playerId);
