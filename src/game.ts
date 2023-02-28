@@ -36,9 +36,15 @@ export const gameCreate = (
   gameId: string,
   hostId: string,
   hostName: string
-): Game => {
+): Game | null => {
   // create a new game with id and default values
   // and add it to the games map
+
+  // check if game already exists
+  if (games.has(gameId)) {
+    log("game", `game ${gameId} already exists`);
+    return null;
+  }
 
   const game: Game = {
     id: gameId,
