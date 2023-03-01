@@ -397,6 +397,248 @@ describe("gameAddPlayer", () => {
   });
 });
 
+describe("gameStart", () => {
+  beforeEach(() => {
+    // clear the games and playersInGame maps
+    games.clear();
+    playersInGame.clear();
+  });
+
+  test("should be able to start a game by host", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+    const words: [string, string] = ["word1", "word2"];
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      gameAddPlayer(gameId, playerId, playerName);
+    });
+
+    // start the game
+    const startedGame = gameStart(hostId, gameId, words, 1);
+
+    if (startedGame === null) {
+      fail("gameStart returned null");
+    }
+
+    // expect the game to have started
+    expect(startedGame).toBeDefined();
+    expect(startedGame.gameStarted).toBe(true);
+  });
+
+  test("should not be able to start a game by non-host", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+    const words: [string, string] = ["word1", "word2"];
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      gameAddPlayer(gameId, playerId, playerName);
+    });
+
+    // start the game
+    const startedGame = gameStart(playerIds[0], gameId, words, 1);
+
+    // expect the game to not have started
+    expect(startedGame).toBeNull();
+  });
+
+  test("should not be able to start a game with less than 3 players", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const words: [string, string] = ["word1", "word2"];
+
+    // create a game
+    gameCreate(gameId, hostId, "hostName");
+
+    // add a player to the game
+    gameAddPlayer(gameId, "playerId", "playerName");
+
+    // try to start the game
+    const startedGame = gameStart(hostId, gameId, words, 1);
+
+    // expect the game to not have started
+    expect(startedGame).toBeNull();
+  });
+
+  test("should not be able to start a game twice", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+    const words: [string, string] = ["word1", "word2"];
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      gameAddPlayer(gameId, playerId, playerName);
+    });
+
+    // start the game
+    const startedGame = gameStart(hostId, gameId, words, 1);
+
+    if (startedGame === null) {
+      fail("gameStart returned null");
+    }
+
+    // start the game again
+    const startedGameAgain = gameStart(hostId, gameId, words, 1);
+
+    // expect the game to not have started
+    expect(startedGameAgain).toBeNull();
+  });
+
+  test("should not be able to start a game with invalid words", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+    const invalidWords: [string, string][] = [
+      ["", "word2"],
+      ["word1", ""],
+      ["word1", "word1"],
+      [" ", " "],
+      ["", ""],
+    ];
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      gameAddPlayer(gameId, playerId, playerName);
+    });
+
+    // start the game
+    invalidWords.forEach((words) => {
+      const startedGame = gameStart(hostId, gameId, words, 1);
+
+      // expect the game to not have started
+      expect(startedGame).toBeNull();
+    });
+  });
+
+  test("should not be able to start a game with less than 1 undercover", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+    const words: [string, string] = ["word1", "word2"];
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      gameAddPlayer(gameId, playerId, playerName);
+    });
+
+    // start the game
+    const startedGame = gameStart(hostId, gameId, words, 0);
+
+    // expect the game to not have started
+    expect(startedGame).toBeNull();
+  });
+
+  test("should not be able to start a game with floor(numPlayers / 2) undercovers or more", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+
+    for (let numPlayers = 3; numPlayers <= 10; numPlayers++) {
+      const numUndercovers = Math.floor((numPlayers + 1) / 2) + 1;
+      const playerIds = Array.from(
+        { length: numPlayers },
+        (_, i) => `playerId${i}`
+      );
+      const playerNames = Array.from(
+        { length: numPlayers },
+        (_, i) => `playerName${i}`
+      );
+      const words: [string, string] = ["word1", "word2"];
+
+      // create a game
+      gameCreate(gameId, hostId, hostName);
+
+      // add players to the game
+      playerIds.forEach((playerId, i) => {
+        const playerName = playerNames[i];
+
+        gameAddPlayer(gameId, playerId, playerName);
+      });
+
+      // start the game
+      console.log(numPlayers, numUndercovers);
+      const startedGame = gameStart(hostId, gameId, words, numUndercovers);
+
+      // expect the game to not have started
+      expect(startedGame).toBeNull();
+    }
+  });
+});
+
 describe("gameVote", () => {
   beforeEach(() => {
     // clear the games and playersInGame maps
@@ -409,16 +651,17 @@ describe("gameVote", () => {
     const hostId = "hostId";
     const hostName = "hostName";
     const playerId = "playerId";
-    const playerName = "playerName";
+    const playerId2 = "playerId2";
 
     // create a game
     gameCreate(gameId, hostId, hostName);
 
-    // add a player to the game
-    gameAddPlayer(gameId, playerId, playerName);
+    // add two players to the game
+    gameAddPlayer(gameId, playerId, "playerName");
+    gameAddPlayer(gameId, playerId2, "playerName2");
 
     // start the game
-    gameStart(gameId, ["word1", "word2"], 1);
+    gameStart(hostId, gameId, ["word1", "word2"], 1);
 
     // vote for the player
     const res = gameVote(gameId, playerId, hostId);
@@ -462,16 +705,17 @@ describe("gameVote", () => {
 
   test("should not be able to vote for themselves", () => {
     const gameId = "gameId";
+    const hostId = "hostId";
     const playerId = "playerId";
 
     // create a game
-    gameCreate(gameId, playerId, "hostName");
+    gameCreate(gameId, hostId, "hostName");
 
     // add a player to the game
     gameAddPlayer(gameId, playerId, "playerName");
 
     // start the game
-    gameStart(gameId, ["word1", "word2"], 1);
+    gameStart(hostId, gameId, ["word1", "word2"], 1);
 
     // vote for the player
     const res = gameVote(gameId, playerId, playerId);
@@ -483,6 +727,7 @@ describe("gameVote", () => {
 
   test("should not be able to vote for a player that is not in the game", () => {
     const gameId = "gameId";
+    const hostId = "hostId";
     const playerId = "playerId";
 
     // create a game
@@ -492,7 +737,7 @@ describe("gameVote", () => {
     gameAddPlayer(gameId, playerId, "playerName");
 
     // start the game
-    gameStart(gameId, ["word1", "word2"], 1);
+    gameStart(hostId, gameId, ["word1", "word2"], 1);
 
     // vote for a player that is not in the game
     const res = gameVote(gameId, playerId, "idThatDoesNotExist");
@@ -514,7 +759,7 @@ describe("gameVote", () => {
     gameAddPlayer(gameId, playerId, "playerName");
 
     // start the game
-    gameStart(gameId, ["word1", "word2"], 1);
+    gameStart(hostId, gameId, ["word1", "word2"], 1);
 
     // eliminate the player
     gameEliminatePlayer(gameId, playerId);

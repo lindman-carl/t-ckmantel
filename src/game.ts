@@ -254,6 +254,68 @@ export const gameStart = (
     return null;
   }
 
+  // check if game is already started
+  if (game.gameStarted) {
+    console.log("game already started");
+    return null;
+  }
+
+  // check if there are enough players
+  if (Object.keys(game.players).length < 3) {
+    console.log("not enough players, need at least 3");
+    return null;
+  }
+
+  // check for valid words
+  if (words) {
+    if (words[0] === words[1]) {
+      console.log("words cannot be the same");
+      return null;
+    }
+
+    // validate input with zod
+    const wordSchema = z
+      .string()
+      .min(1, { message: "Word: min 1 character" })
+      .max(12, { message: "Word: max 30 characters" });
+
+    try {
+      wordSchema.parse(words[0]);
+      wordSchema.parse(words[1]);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        console.log(err.issues[0].message);
+        return null;
+      }
+    }
+  }
+
+  // check for valid numUndercover
+  // at least 1 is required
+  // less than half of players is required
+  // validate input with zod
+  // ie:
+  //    3-4 players: 1 undercover
+  //    5-6 players: 1-2 undercover
+  //    7-8 players: 1-3 undercover
+  const maxUndercover = Object.keys(game.players).length / 2;
+  const numUndercoverSchema = z
+    .number()
+    .int({ message: "Number of undercover: must be an integer" })
+    .min(1, { message: "Number of undercover: min 1" })
+    .max(maxUndercover, {
+      message: `Number of undercover: max ${maxUndercover}`,
+    });
+
+  try {
+    numUndercoverSchema.parse(numUndercover);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      console.log(err.issues[0].message);
+      return null;
+    }
+  }
+
   // set who is undercover
   // get random order of players
   const playerIds = Object.keys(game.players);
