@@ -80,7 +80,7 @@ const WordsSettingsComponent = ({
   </div>
 );
 
-const SideDrawer = ({ open, onClose, onStartGame }: Props) => {
+const GameDrawer = ({ open, onClose, onStartGame }: Props) => {
   const [gameMode, setGameMode] = useState<"random" | "custom">("random");
   const [firstWord, setFirstWord] = useState("");
   const [secondWord, setSecondWord] = useState("");
@@ -193,4 +193,4 @@ const SideDrawer = ({ open, onClose, onStartGame }: Props) => {
   );
 };
 
-export default SideDrawer;
+export default GameDrawer;

@@ -6,7 +6,7 @@ import Logo from "./components/Logo";
 import Menu from "./components/Menu";
 import Modal from "./components/Modal";
 import PlayerList from "./components/PlayerList";
-import SideDrawer from "./components/SideDrawer";
+import GameDrawer from "./components/GameDrawer";
 import SignatureFooter from "./components/SignatureFooter";
 import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
@@ -79,6 +79,8 @@ const App = () => {
       // get latest votes
       if (game.votes[0].hasOwnProperty(CLIENT_ID)) {
         setHasVoted(true);
+      } else {
+        setHasVoted(false);
       }
     });
 
@@ -210,10 +212,10 @@ const App = () => {
                       game.gameOver ? (
                         <Button
                           onClick={() => setDrawerIsOpen(true)}
-                          label={"Play2"}
+                          label={"Play again"}
                         />
                       ) : (
-                        <div>Game has started</div>
+                        <div>The game has started</div>
                       )
                     ) : (
                       <Button
@@ -263,7 +265,7 @@ const App = () => {
           onClose={() => setShowModal(false)}
         />
       )}
-      <SideDrawer
+      <GameDrawer
         open={drawerIsOpen}
         onClose={() => setDrawerIsOpen(false)}
         onStartGame={handleStartGame}
