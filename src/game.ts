@@ -111,6 +111,22 @@ export const gameAddPlayer = (
 ): Game | null => {
   // add player to game object by id
 
+  // validate input with zod
+  const trimmedPlayerName = playerName.trim();
+  const playerNameSchema = z
+    .string()
+    .min(1, { message: "Player name: min 1 character" })
+    .max(12, { message: "Player name: max 12 characters" });
+
+  try {
+    playerNameSchema.parse(trimmedPlayerName);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      log("game", err.issues[0].message);
+      return null;
+    }
+  }
+
   // check if player is already in game
   if (playersInGame.has(playerId)) {
     log("game", `player ${playerId} already in game`);
@@ -131,7 +147,7 @@ export const gameAddPlayer = (
     [playerId]: {
       isUndercover: false,
       inGame: false,
-      name: playerName,
+      name: trimmedPlayerName,
       wins: 0,
       hasVoted: false,
     },

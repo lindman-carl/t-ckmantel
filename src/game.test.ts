@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 import { games, gameCreate, playersInGame, gameAddPlayer } from "./game.js";
 
 describe("gameCreate", () => {
@@ -306,10 +308,7 @@ describe("gameAddPlayer", () => {
       { length: numPlayers },
       (_, i) => `playerId${i}`
     );
-    const playerNames = Array.from(
-      { length: numPlayers },
-      (_, i) => `playerName${i}`
-    );
+    const playerNames = Array.from({ length: numPlayers }, (_, i) => `p${i}`);
 
     // create games
     gameIds.forEach((gameId, i) => {
@@ -360,5 +359,32 @@ describe("gameAddPlayer", () => {
 
     // expect the number of players to be in the playersInGame map
     expect(playersInGame.size).toBe(numGames * numPlayers + numGames);
+  });
+
+  test("should not add a player with an invalid name", () => {
+    const gameId = "gameId";
+    const hostName = "hostName";
+    const invalidPlayerNames = ["", " ", "  ", "longerThan12C"];
+
+    // create a game
+    gameCreate(gameId, nanoid(), hostName);
+
+    // add players to the game
+    invalidPlayerNames.forEach((playerName) => {
+      const updatedGame = gameAddPlayer(gameId, nanoid(), playerName);
+
+      // expect the game to be null
+      expect(updatedGame).toBeNull();
+    });
+
+    // expect the number of players to be in the playersInGame map
+    expect(playersInGame.size).toBe(1);
+
+    // expect the game to not have any players other than the host
+    const game = games.get(gameId);
+    if (game === undefined) {
+      fail(gameId + "not found in games map");
+    }
+    expect(Object.keys(game.players).length).toBe(1);
   });
 });
