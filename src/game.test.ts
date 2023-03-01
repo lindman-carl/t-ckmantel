@@ -5,6 +5,7 @@ import {
   playersInGame,
   gameCreate,
   gameAddPlayer,
+  gameRemovePlayer,
   gameVote,
   gameEliminatePlayer,
   gameStart,
@@ -397,6 +398,64 @@ describe("gameAddPlayer", () => {
   });
 });
 
+describe("gameRemovePlayer", () => {
+  beforeEach(() => {
+    // clear the games and playersInGame maps
+    games.clear();
+    playersInGame.clear();
+  });
+
+  test("should be able to remove a player from a game", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const numPlayers = 5;
+    const playerIds = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerId${i}`
+    );
+    const playerNames = Array.from(
+      { length: numPlayers },
+      (_, i) => `playerName${i}`
+    );
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add players to the game
+    playerIds.forEach((playerId, i) => {
+      const playerName = playerNames[i];
+
+      const updatedGame = gameAddPlayer(gameId, playerId, playerName);
+
+      if (updatedGame === null) {
+        fail("gameAddPlayer returned null");
+      }
+    });
+
+    // remove a player from the game
+    const playerIdToRemove = playerIds[0];
+    const updatedGame = gameRemovePlayer(gameId, playerIdToRemove);
+
+    if (updatedGame === null) {
+      fail("gameRemovePlayer returned null");
+    }
+
+    // expect the player to be removed from the game
+    const game = games.get(gameId);
+    if (game === undefined) {
+      fail(gameId + "not found in games map");
+    }
+    expect(game.players[playerIdToRemove]).toBeUndefined();
+
+    // expect the player to be removed from the playersInGame map
+    expect(playersInGame.get(playerIdToRemove)).toBeUndefined();
+
+    // expect the number of players to be in the playersInGame map
+    expect(playersInGame.size).toBe(numPlayers);
+  });
+});
+
 describe("gameStart", () => {
   beforeEach(() => {
     // clear the games and playersInGame maps
@@ -706,6 +765,25 @@ describe("gameVote", () => {
     // expect the number of votes to be 1
     const voteKeys = Object.keys(updatedGame.votes);
     expect(voteKeys).toHaveLength(1);
+  });
+
+  test("should not be able to vote for a player if the game id is non-existent", () => {
+    // create a game
+    gameCreate("gameId", "hostId", "hostName");
+
+    // add two players to the game
+    gameAddPlayer("gameId", "playerId", "playerName");
+    gameAddPlayer("gameId", "playerId2", "playerName2");
+
+    // start the game
+    gameStart("hostId", "gameId", ["word1", "word2"], 1);
+
+    // vote for a player but with a non-existent game id
+    const res = gameVote("invalidGameId", "playerId", "hostId");
+
+    // expect the vote to not be successful
+    // expect the game to be null
+    expect(res).toBeNull();
   });
 
   test("should not be able to vote if the game has not started", () => {
