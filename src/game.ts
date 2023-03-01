@@ -304,7 +304,14 @@ export const gameStart = (
   //    3-4 players: 1 undercover
   //    5-6 players: 1-2 undercover
   //    7-8 players: 1-3 undercover
-  const maxUndercover = Object.keys(game.players).length / 2;
+  // calculate max number of undercovers
+  const numPlayers = Object.keys(game.players).length;
+  let maxUndercover = 1;
+  if (numPlayers % 2 === 0) {
+    maxUndercover = numPlayers / 2 - 1;
+  } else {
+    maxUndercover = (numPlayers - 1) / 2;
+  }
   const numUndercoverSchema = z
     .number()
     .int({ message: "Number of undercover: must be an integer" })
