@@ -41,18 +41,20 @@ io.on("connection", (socket) => {
 
   log("server", `client connected: ${clientId}`);
 
+  // check if the player is reconnecting to a game
+  // by checking if the player is in the playersInGame map
   if (playersInGame.has(clientId)) {
     const gameId = playersInGame.get(clientId);
     if (!gameId) {
       console.log("could not find game id");
       return;
     }
-    socket.join(gameId);
     const game = games.get(gameId);
     if (!game) {
       console.log("could not find game");
       return;
     }
+    socket.join(gameId);
     socket.emit("game-reconnect-player", game);
   }
 
