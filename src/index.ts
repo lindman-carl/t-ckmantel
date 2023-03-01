@@ -150,9 +150,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // update games map
-    games.set(gameId, res.updatedGame);
-
     // emit game update
     if (res.newRound) {
       io.to(gameId).emit("game-round-new");
