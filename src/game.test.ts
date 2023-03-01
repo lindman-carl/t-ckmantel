@@ -570,6 +570,32 @@ describe("gameStart", () => {
     });
   });
 
+  test("should start game with random words if no words are provided", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add players to the game
+    gameAddPlayer(gameId, "playerId1", "playerName1");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+    gameAddPlayer(gameId, "playerId3", "playerName3");
+
+    // start the game
+    const startedGame = gameStart("hostId", gameId, null, 1);
+
+    if (startedGame === null) {
+      fail("gameStart returned null");
+    }
+
+    // expect the game to have started
+    expect(startedGame).toBeDefined();
+    expect(startedGame.gameStarted).toBe(true);
+
+    // expect the game to have random words
+    expect(startedGame.words).not.toEqual(["", ""]);
+  });
+
   test("should not be able to start a game with less than 1 undercover", () => {
     const gameId = "gameId";
     const hostId = "hostId";
@@ -770,5 +796,246 @@ describe("gameVote", () => {
     // expect the vote to not be successful
     // expect the game to be null
     expect(res).toBeNull();
+  });
+
+  test("should not eliminate a player if there is a tie", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add three players to the game
+    gameAddPlayer(gameId, "playerId", "playerName");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+    gameAddPlayer(gameId, "playerId3", "playerName3");
+
+    // start the game
+    gameStart("hostId", gameId, ["word1", "word2"], 1);
+
+    // vote for the first player
+    gameVote(gameId, "hostId", "playerId");
+    gameVote(gameId, "playerId2", "playerId");
+
+    // vote for the second player
+    gameVote(gameId, "playerId", "playerId2");
+    gameVote(gameId, "playerId3", "playerId2");
+
+    // expect the round to be over
+    const game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    expect(game?.message).toBe("there was a tie, no one was eliminated");
+
+    // expect 4 players to still be in the game
+    // count players .inGame
+    const numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+    expect(numPlayersLeftInGame).toBe(4);
+    expect(game.round).toBe(1);
+  });
+
+  test("should eliminate a player if they got more votes than everyone else", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add four players to the game
+    gameAddPlayer(gameId, "playerId", "playerName");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+    gameAddPlayer(gameId, "playerId3", "playerName3");
+    gameAddPlayer(gameId, "playerId4", "playerName4");
+
+    // start the game
+    gameStart("hostId", gameId, ["word1", "word2"], 1);
+
+    // vote for the first player
+    gameVote(gameId, "hostId", "playerId");
+    gameVote(gameId, "playerId2", "playerId");
+
+    // vote for the other players
+    gameVote(gameId, "playerId", "playerId2");
+    gameVote(gameId, "playerId3", "playerId4");
+    gameVote(gameId, "playerId4", "playerId3");
+
+    // expect the round to be over
+    const game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    expect(game?.message).toBe("player playerName was eliminated");
+
+    // expect 4 players to still be in the game
+    // count players .inGame
+    const numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+    expect(numPlayersLeftInGame).toBe(4);
+    expect(game.round).toBe(1);
+  });
+
+  test("should end game when the last undercover is voted out", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const playerId = "playerId";
+    const playerId2 = "playerId2";
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add two players to the game
+    gameAddPlayer(gameId, playerId, "playerName");
+    gameAddPlayer(gameId, playerId2, "playerName2");
+
+    // start the game
+    gameStart(hostId, gameId, ["word1", "word2"], 1);
+
+    // get who is undercover
+    let game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    const undercoverPlayer = Object.entries(game.players).find(
+      ([_, player]) => {
+        return player.isUndercover;
+      }
+    );
+
+    if (undercoverPlayer === undefined) {
+      fail("no undercover was found");
+    }
+
+    const [undercoverId] = undercoverPlayer;
+
+    // get players who are not undercover
+    const nonUndercoverPlayers = Object.keys(game.players).filter(
+      (playerId) => {
+        return playerId !== undercoverId;
+      }
+    );
+
+    // vote for the undercover
+    nonUndercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, undercoverId);
+    });
+
+    // let the undercover vote for someone else
+    gameVote(gameId, undercoverId, nonUndercoverPlayers[0]);
+
+    // get the game again
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // expect the game to be over
+    expect(game.gameOver).toBe(true);
+  });
+
+  test("should end game when there is no longer a majority of non-undercover players", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add three players to the game
+    gameAddPlayer(gameId, "playerId", "playerName");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+    gameAddPlayer(gameId, "playerId3", "playerName3");
+
+    // start the game
+    gameStart("hostId", gameId, ["word1", "word2"], 1);
+
+    // get who is undercover
+    let game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    const undercoverPlayer = Object.entries(game.players).find(
+      ([_, player]) => {
+        return player.isUndercover;
+      }
+    );
+
+    if (undercoverPlayer === undefined) {
+      fail("no undercover was found");
+    }
+
+    const [undercoverId] = undercoverPlayer;
+
+    // get players who are not undercover
+    let nonUndercoverPlayers = Object.keys(game.players).filter((playerId) => {
+      return playerId !== undercoverId;
+    });
+
+    // vote for someone who is not undercover
+    let targetId = nonUndercoverPlayers[0];
+    gameVote(gameId, undercoverId, targetId);
+
+    nonUndercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, undercoverId);
+      }
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    let numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+    expect(numPlayersLeftInGame).toBe(3);
+    expect(game.round).toBe(1);
+
+    // next round
+    targetId = nonUndercoverPlayers[1];
+    gameVote(gameId, undercoverId, targetId);
+
+    nonUndercoverPlayers.forEach((playerId) => {
+      // skip voting if the player is already eliminated
+      if (game?.players[playerId].inGame === false) {
+        return;
+      }
+
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, undercoverId);
+      }
+    });
+
+    // expect two players to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+    expect(numPlayersLeftInGame).toBe(2);
+    expect(game.round).toBe(2);
+
+    // expect the game to be over
+    // the undercover player won because there is no longer a majority of non-undercover players
+    expect(game.gameOver).toBe(true);
   });
 });
