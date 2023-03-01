@@ -194,7 +194,7 @@ const App = () => {
 
   return (
     <>
-      <div className="flex h-screen w-screen flex-col items-center justify-start text-lg text-white">
+      <div className="flex h-full min-h-screen w-screen flex-col items-center justify-start text-lg text-white">
         <Logo />
         {isConnected ? (
           hasJoinedGame && game ? (
