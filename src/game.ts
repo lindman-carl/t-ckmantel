@@ -236,6 +236,7 @@ export const gameEliminatePlayer = (
 };
 
 export const gameStart = (
+  startedBy: string,
   gameId: string,
   words: [string, string] | null,
   numUndercover: number
@@ -244,6 +245,12 @@ export const gameStart = (
   const game = games.get(gameId);
   if (!game) {
     console.log("could not find game");
+    return null;
+  }
+
+  // check if the game is started by the host
+  if (game.host !== startedBy) {
+    console.log("game can only be started by the host");
     return null;
   }
 

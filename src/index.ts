@@ -128,8 +128,8 @@ io.on("connection", (socket) => {
     socket.leave(gameId);
   });
 
-  socket.on("game-start", (gameId, words, numUndercover) => {
-    const updatedGame = gameStart(gameId, words, numUndercover);
+  socket.on("game-start", (startedBy, gameId, words, numUndercover) => {
+    const updatedGame = gameStart(startedBy, gameId, words, numUndercover);
     if (!updatedGame) {
       console.log("could not start game");
       return;

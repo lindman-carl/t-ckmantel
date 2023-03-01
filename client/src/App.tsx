@@ -170,7 +170,7 @@ const App = () => {
       return;
     }
 
-    socket.emit("game-start", game.id, words, numUndercover);
+    socket.emit("game-start", CLIENT_ID, game.id, words, numUndercover);
     setDrawerIsOpen(false);
   };
 

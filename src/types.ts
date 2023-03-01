@@ -50,6 +50,7 @@ export interface ClientToServerEvents {
   ) => void;
   "game-kick": (gameId: string, playerId: string, hostId: string) => void;
   "game-start": (
+    startedBy: string,
     gameId: string,
     words: [string, string] | null,
     numUndercover: number
