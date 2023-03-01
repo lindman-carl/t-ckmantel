@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 import { Game } from "./types.js";
-import { getRandomWords, log, shuffleArray } from "./utils.js";
+import {
+  generateChordData,
+  getRandomWords,
+  log,
+  shuffleArray,
+} from "./utils.js";
 
 export const games = new Map<string, Game>();
 export const playersInGame = new Map<string, string>();
@@ -285,4 +290,188 @@ export const gameStart = (
 
   // return success
   return updatedGame;
+};
+
+export const gameVote = (
+  gameId: string,
+  playerId: string,
+  voteForId: string
+): { updatedGame: Game; newRound: boolean } | null => {
+  // handles user voting for a player
+  // returns updated game and whether a new round should start
+  // the round is over when all players have voted
+  // if the round is over, the votes are counted and a player is eliminated if they have more votes than all other players
+
+  // get game
+  const game = games.get(gameId);
+  if (!game) {
+    console.log("could not find game");
+    return null;
+  }
+
+  // update votes
+  const currentVotesObject = game.votes[0];
+  const updatedVotesObject = { ...currentVotesObject };
+  updatedVotesObject[playerId] = voteForId;
+  const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
+
+  // count votes
+  const voteCount = Object.keys(updatedVotesObject).length;
+
+  const expectedVoteCount = Object.values(game.players).reduce(
+    (acc, player) => acc + (player.inGame ? 1 : 0),
+    0
+  );
+
+  const updatedPlayers = {
+    ...game.players,
+    [playerId]: { ...game.players[playerId], hasVoted: true },
+  };
+  let message = null;
+  let gameOver = false;
+
+  // end round if all votes are in
+  if (voteCount === expectedVoteCount) {
+    // count votes for each player
+    const voteCounts = Object.values(updatedVotesObject).reduce(
+      (acc, voteForId) => {
+        if (acc[voteForId]) {
+          acc[voteForId]++;
+        } else {
+          acc[voteForId] = 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    // check if any player has more than anyone else
+    // draws are possible and will result in no one being eliminated
+    let currentMax = 0;
+    let currentMaxPlayerId: string | null = null;
+    for (const [playerId, voteCount] of Object.entries(voteCounts)) {
+      if (voteCount > currentMax) {
+        currentMax = voteCount;
+        currentMaxPlayerId = playerId;
+      } else if (voteCount === currentMax) {
+        // if there is a tie, no one is eliminated
+        currentMaxPlayerId = null;
+      }
+    }
+
+    // if there is a player with the most votes, eliminate them
+    if (currentMaxPlayerId !== null) {
+      updatedPlayers[currentMaxPlayerId] = {
+        ...updatedPlayers[currentMaxPlayerId],
+        inGame: false,
+      };
+      const eliminatedPlayerName = updatedPlayers[currentMaxPlayerId].name;
+      message = `player ${eliminatedPlayerName} was eliminated`;
+
+      // check if game is over
+      const numCommonersInGame = Object.values(updatedPlayers).reduce(
+        (acc, player) => acc + (!player.isUndercover && player.inGame ? 1 : 0),
+        0
+      );
+      const numUndercoversInGame = Object.values(updatedPlayers).reduce(
+        (acc, player) => acc + (player.isUndercover && player.inGame ? 1 : 0),
+        0
+      );
+      if (numUndercoversInGame === 0) {
+        // if there are no undercover players left, the commoners win
+        // get ids of commoners players left
+        const survivingCommonersPlayerNames = Object.values(updatedPlayers)
+          .filter((player) => !player.isUndercover && player.inGame)
+          .map((player) => player.name);
+
+        message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(
+          ", "
+        )}`;
+        gameOver = true;
+
+        // give wins to surviving commoners
+        for (const playerId of Object.keys(updatedPlayers)) {
+          if (
+            !updatedPlayers[playerId].isUndercover &&
+            updatedPlayers[playerId].inGame
+          ) {
+            updatedPlayers[playerId] = {
+              ...updatedPlayers[playerId],
+              wins: updatedPlayers[playerId].wins + 1,
+            };
+          }
+        }
+      } else if (numCommonersInGame <= numUndercoversInGame) {
+        // if there are as many or fewer commoners than undercover players left, the undercover win
+        const survivingUndercoverPlayerNames = Object.values(updatedPlayers)
+          .filter((player) => player.isUndercover && player.inGame)
+          .map((player) => player.name);
+
+        message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(
+          ", "
+        )}`;
+        gameOver = true;
+
+        // give wins to surviving undercovers
+        for (const playerId of Object.keys(updatedPlayers)) {
+          if (
+            updatedPlayers[playerId].isUndercover &&
+            updatedPlayers[playerId].inGame
+          ) {
+            updatedPlayers[playerId] = {
+              ...updatedPlayers[playerId],
+              wins: updatedPlayers[playerId].wins + 1,
+            };
+          }
+        }
+      }
+    } else {
+      // if there is a tie, no one is eliminated
+      message = "there was a tie, no one was eliminated";
+    }
+
+    // increment round
+    const round = game.round + 1;
+
+    // set all players to not have voted
+    for (const playerId of Object.keys(updatedPlayers)) {
+      updatedPlayers[playerId] = {
+        ...updatedPlayers[playerId],
+        hasVoted: false,
+      };
+    }
+
+    // generate a new chord matrix
+    const chordData = generateChordData(updatedVotes);
+
+    // new round, make new votes object in the beginning of the votes array
+    updatedVotes.unshift({});
+
+    // update game
+    const updatedGame: Game = {
+      ...game,
+      votes: updatedVotes,
+      round,
+      players: updatedPlayers,
+      message,
+      gameOver,
+      chordData,
+    };
+
+    // update games map
+    games.set(gameId, updatedGame);
+
+    console.log(updatedVotes);
+
+    return { updatedGame, newRound: true };
+  }
+
+  // update game
+  const updatedGame: Game = {
+    ...game,
+    votes: updatedVotes,
+    players: updatedPlayers,
+  };
+
+  return { updatedGame, newRound: false };
 };

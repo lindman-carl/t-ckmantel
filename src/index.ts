@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // local imports
-import { generateChordData, log } from "./utils.js";
+import { log } from "./utils.js";
 import {
   gameAddPlayer,
   gameCreate,
@@ -16,8 +16,9 @@ import {
   logGame,
   gameRemovePlayer,
   gameStart,
+  gameVote,
 } from "./game.js";
-import { ClientToServerEvents, Game, ServerToClientEvents } from "./types.js";
+import { ClientToServerEvents, ServerToClientEvents } from "./types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
@@ -141,190 +142,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("game-vote", (gameId, playerId, voteForId) => {
-    // get game
-    const game = games.get(gameId);
-    if (!game) {
-      console.log("could not find game");
+    const res = gameVote(gameId, playerId, voteForId);
+    if (res === null) {
+      console.log("could not vote");
       return;
     }
-
-    // update votes
-    const currentVotesObject = game.votes[0];
-    const updatedVotesObject = { ...currentVotesObject };
-    updatedVotesObject[playerId] = voteForId;
-    const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
-
-    // count votes
-    const voteCount = Object.keys(updatedVotesObject).length;
-
-    const expectedVoteCount = Object.values(game.players).reduce(
-      (acc, player) => acc + (player.inGame ? 1 : 0),
-      0
-    );
-
-    console.log("expected vote count", expectedVoteCount);
-    console.log("vote count", voteCount);
-
-    const updatedPlayers = {
-      ...game.players,
-      [playerId]: { ...game.players[playerId], hasVoted: true },
-    };
-    let message = null;
-    let gameOver = false;
-
-    // end round if all votes are in
-    if (voteCount === expectedVoteCount) {
-      // count votes for each player
-      const voteCounts = Object.values(updatedVotesObject).reduce(
-        (acc, voteForId) => {
-          if (acc[voteForId]) {
-            acc[voteForId]++;
-          } else {
-            acc[voteForId] = 1;
-          }
-          return acc;
-        },
-        {} as Record<string, number>
-      );
-      console.log(voteCounts);
-
-      // check if any player has more than anyone else
-      // draws are possible and will result in no one being eliminated
-      let currentMax = 0;
-      let currentMaxPlayerId: string | null = null;
-      for (const [playerId, voteCount] of Object.entries(voteCounts)) {
-        if (voteCount > currentMax) {
-          currentMax = voteCount;
-          currentMaxPlayerId = playerId;
-        } else if (voteCount === currentMax) {
-          // if there is a tie, no one is eliminated
-          currentMaxPlayerId = null;
-        }
-      }
-
-      // if there is a player with the most votes, eliminate them
-      if (currentMaxPlayerId !== null) {
-        updatedPlayers[currentMaxPlayerId] = {
-          ...updatedPlayers[currentMaxPlayerId],
-          inGame: false,
-        };
-        const eliminatedPlayerName = updatedPlayers[currentMaxPlayerId].name;
-        message = `player ${eliminatedPlayerName} was eliminated`;
-
-        // check if game is over
-        const numCommonersInGame = Object.values(updatedPlayers).reduce(
-          (acc, player) =>
-            acc + (!player.isUndercover && player.inGame ? 1 : 0),
-          0
-        );
-        const numUndercoversInGame = Object.values(updatedPlayers).reduce(
-          (acc, player) => acc + (player.isUndercover && player.inGame ? 1 : 0),
-          0
-        );
-        if (numUndercoversInGame === 0) {
-          // if there are no undercover players left, the commoners win
-          // get ids of commoners players left
-          const survivingCommonersPlayerNames = Object.values(updatedPlayers)
-            .filter((player) => !player.isUndercover && player.inGame)
-            .map((player) => player.name);
-
-          message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(
-            ", "
-          )}`;
-          gameOver = true;
-
-          // give wins to surviving commoners
-          for (const playerId of Object.keys(updatedPlayers)) {
-            if (
-              !updatedPlayers[playerId].isUndercover &&
-              updatedPlayers[playerId].inGame
-            ) {
-              updatedPlayers[playerId] = {
-                ...updatedPlayers[playerId],
-                wins: updatedPlayers[playerId].wins + 1,
-              };
-            }
-          }
-        } else if (numCommonersInGame <= numUndercoversInGame) {
-          // if there are as many or fewer commoners than undercover players left, the undercover win
-          const survivingUndercoverPlayerNames = Object.values(updatedPlayers)
-            .filter((player) => player.isUndercover && player.inGame)
-            .map((player) => player.name);
-
-          message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(
-            ", "
-          )}`;
-          gameOver = true;
-
-          // give wins to surviving undercovers
-          for (const playerId of Object.keys(updatedPlayers)) {
-            if (
-              updatedPlayers[playerId].isUndercover &&
-              updatedPlayers[playerId].inGame
-            ) {
-              updatedPlayers[playerId] = {
-                ...updatedPlayers[playerId],
-                wins: updatedPlayers[playerId].wins + 1,
-              };
-            }
-          }
-        }
-      } else {
-        // if there is a tie, no one is eliminated
-        message = "there was a tie, no one was eliminated";
-      }
-
-      // increment round
-      const round = game.round + 1;
-
-      // set all players to not have voted
-      for (const playerId of Object.keys(updatedPlayers)) {
-        updatedPlayers[playerId] = {
-          ...updatedPlayers[playerId],
-          hasVoted: false,
-        };
-      }
-
-      // generate a new chord matrix
-      const chordData = generateChordData(updatedVotes);
-
-      // new round, make new votes object in the beginning of the votes array
-      updatedVotes.unshift({});
-
-      // update game
-      const updatedGame: Game = {
-        ...game,
-        votes: updatedVotes,
-        round,
-        players: updatedPlayers,
-        message,
-        gameOver,
-        chordData,
-      };
-
-      // update games map
-      games.set(gameId, updatedGame);
-
-      console.log(updatedVotes);
-
-      // emit game update
-      io.to(gameId).emit("game-update", updatedGame);
-      io.to(gameId).emit("game-round-new");
-      return;
-    }
-
-    // update game
-    const updatedGame: Game = {
-      ...game,
-      votes: updatedVotes,
-      players: updatedPlayers,
-    };
 
     // update games map
-    games.set(gameId, updatedGame);
+    games.set(gameId, res.updatedGame);
 
     // emit game update
-    io.to(gameId).emit("game-update", updatedGame);
+    if (res.newRound) {
+      io.to(gameId).emit("game-round-new");
+    }
+    io.to(gameId).emit("game-update", res.updatedGame);
   });
 });
 
