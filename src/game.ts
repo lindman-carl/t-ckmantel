@@ -146,6 +146,12 @@ export const gameAddPlayer = (
     return null;
   }
 
+  // check if the game has already started
+  if (game.gameStarted) {
+    log("game", `game ${gameId} has already started`);
+    return null;
+  }
+
   // add player to game
   const newPlayers = {
     ...game.players,

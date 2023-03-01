@@ -228,6 +228,29 @@ describe("gameAddPlayer", () => {
     expect(playersInGame.size).toBe(0);
   });
 
+  test("should not add a player to a game if the game has already started", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add two players to the game
+    gameAddPlayer(gameId, "playerId1", "playerName1");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+
+    // start the game
+    gameStart("hostId", gameId, null, 1);
+
+    // add a player to the game after it has started
+    const updatedGame = gameAddPlayer(gameId, "playerId3", "playerName3");
+
+    // expect the game to be null
+    expect(updatedGame).toBeNull();
+
+    // expect the player to not be added to the playerInGame map
+    expect(playersInGame.size).toBe(3);
+  });
+
   test("should not add a player to a game if the player is already in a game", () => {
     const gameId = "gameId";
     const hostId = "hostId";
