@@ -1,6 +1,14 @@
 import { nanoid } from "nanoid";
 
-import { games, gameCreate, playersInGame, gameAddPlayer } from "./game.js";
+import {
+  games,
+  playersInGame,
+  gameCreate,
+  gameAddPlayer,
+  gameVote,
+  gameEliminatePlayer,
+  gameStart,
+} from "./game.js";
 
 describe("gameCreate", () => {
   beforeEach(() => {
@@ -386,5 +394,136 @@ describe("gameAddPlayer", () => {
       fail(gameId + "not found in games map");
     }
     expect(Object.keys(game.players).length).toBe(1);
+  });
+});
+
+describe("gameVote", () => {
+  beforeEach(() => {
+    // clear the games and playersInGame maps
+    games.clear();
+    playersInGame.clear();
+  });
+
+  test("should be able to vote for another player", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const playerId = "playerId";
+    const playerName = "playerName";
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add a player to the game
+    gameAddPlayer(gameId, playerId, playerName);
+
+    // start the game
+    gameStart(gameId, ["word1", "word2"], 1);
+
+    // vote for the player
+    const res = gameVote(gameId, playerId, hostId);
+
+    if (res === null) {
+      fail("gameVote returned null");
+    }
+
+    // destruct response
+    const { updatedGame } = res;
+
+    // expect the player to have voted
+    const player = updatedGame.players[playerId];
+    expect(player.hasVoted).toBe(true);
+
+    // expect the number of votes to be 1
+    const voteKeys = Object.keys(updatedGame.votes);
+    expect(voteKeys).toHaveLength(1);
+  });
+
+  test("should not be able to vote if the game has not started", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const hostName = "hostName";
+    const playerId = "playerId";
+    const playerName = "playerName";
+
+    // create a game
+    gameCreate(gameId, hostId, hostName);
+
+    // add a player to the game
+    gameAddPlayer(gameId, playerId, playerName);
+
+    // vote for the player before the game has started
+    const res = gameVote(gameId, playerId, hostId);
+
+    // expect the vote to not be successful
+    // expect the game to be null
+    expect(res).toBeNull();
+  });
+
+  test("should not be able to vote for themselves", () => {
+    const gameId = "gameId";
+    const playerId = "playerId";
+
+    // create a game
+    gameCreate(gameId, playerId, "hostName");
+
+    // add a player to the game
+    gameAddPlayer(gameId, playerId, "playerName");
+
+    // start the game
+    gameStart(gameId, ["word1", "word2"], 1);
+
+    // vote for the player
+    const res = gameVote(gameId, playerId, playerId);
+
+    // expect the vote to not be successful
+    // expect the game to be null
+    expect(res).toBeNull();
+  });
+
+  test("should not be able to vote for a player that is not in the game", () => {
+    const gameId = "gameId";
+    const playerId = "playerId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add a player to the game
+    gameAddPlayer(gameId, playerId, "playerName");
+
+    // start the game
+    gameStart(gameId, ["word1", "word2"], 1);
+
+    // vote for a player that is not in the game
+    const res = gameVote(gameId, playerId, "idThatDoesNotExist");
+
+    // expect the vote to not be successful
+    // expect the game to be null
+    expect(res).toBeNull();
+  });
+
+  test("should not be able to vote for a player that is eliminated", () => {
+    const gameId = "gameId";
+    const hostId = "hostId";
+    const playerId = "playerId";
+
+    // create a game
+    gameCreate(gameId, hostId, "hostName");
+
+    // add a player to the game
+    gameAddPlayer(gameId, playerId, "playerName");
+
+    // start the game
+    gameStart(gameId, ["word1", "word2"], 1);
+
+    // eliminate the player
+    gameEliminatePlayer(gameId, playerId);
+
+    // vote for the player
+    const res = gameVote(gameId, hostId, playerId);
+
+    // expect the vote to not be successful
+    // expect the game to be null
+    expect(res).toBeNull();
   });
 });

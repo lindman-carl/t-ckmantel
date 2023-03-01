@@ -205,6 +205,36 @@ export const gameRemovePlayer = (
   return updatedGame;
 };
 
+export const gameEliminatePlayer = (
+  gameId: string,
+  playerId: string
+): Game | null => {
+  // eliminate player from game object by id
+  // FOR TESTING ONLY
+
+  // get game from games map
+  const game = games.get(gameId);
+  if (!game) {
+    log("game", `game ${gameId} not found`);
+    return null;
+  }
+
+  // remove player from game
+  const newPlayers = { ...game.players };
+  newPlayers[playerId] = {
+    ...newPlayers[playerId],
+    inGame: false,
+  };
+  const updatedGame = { ...game, players: newPlayers };
+
+  // update game in games map
+  games.set(game.id, updatedGame);
+
+  log("game", `player ${playerId} eliminated from game ${gameId}`);
+
+  return updatedGame;
+};
+
 export const gameStart = (
   gameId: string,
   words: [string, string] | null,
@@ -302,10 +332,28 @@ export const gameVote = (
   // the round is over when all players have voted
   // if the round is over, the votes are counted and a player is eliminated if they have more votes than all other players
 
+  // check for voting for self
+  if (playerId === voteForId) {
+    console.log("cannot vote for self");
+    return null;
+  }
+
   // get game
   const game = games.get(gameId);
   if (!game) {
     console.log("could not find game");
+    return null;
+  }
+
+  // check that the vote target is in the same game
+  if (!Object.hasOwn(game.players, voteForId)) {
+    console.log("vote target not in game");
+    return null;
+  }
+
+  // check that the target is not eliminated
+  if (!game.players[voteForId].inGame) {
+    console.log("vote target is already eliminated");
     return null;
   }
 
@@ -461,8 +509,6 @@ export const gameVote = (
     // update games map
     games.set(gameId, updatedGame);
 
-    console.log(updatedVotes);
-
     return { updatedGame, newRound: true };
   }
 
@@ -472,6 +518,9 @@ export const gameVote = (
     votes: updatedVotes,
     players: updatedPlayers,
   };
+
+  // update games map
+  games.set(gameId, updatedGame);
 
   return { updatedGame, newRound: false };
 };
