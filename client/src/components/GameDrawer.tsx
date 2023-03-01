@@ -9,6 +9,7 @@ import { z } from "zod";
 
 type Props = {
   open: boolean;
+  numPlayers: number;
   onClose: () => void;
   onStartGame: (words: [string, string] | null, numUndercover: number) => void;
 };
@@ -80,7 +81,7 @@ const WordsSettingsComponent = ({
   </div>
 );
 
-const GameDrawer = ({ open, onClose, onStartGame }: Props) => {
+const GameDrawer = ({ open, numPlayers, onClose, onStartGame }: Props) => {
   const [gameMode, setGameMode] = useState<"random" | "custom">("random");
   const [firstWord, setFirstWord] = useState("");
   const [secondWord, setSecondWord] = useState("");
@@ -91,13 +92,21 @@ const GameDrawer = ({ open, onClose, onStartGame }: Props) => {
   // stop body scroll when drawer is open
   document.body.style.overflow = open ? "hidden" : "unset";
 
+  // calculate max number of undercovers
+  let maxUndercover = 1;
+  if (numPlayers % 2 === 0) {
+    maxUndercover = numPlayers / 2 - 1;
+  } else {
+    maxUndercover = (numPlayers - 1) / 2;
+  }
+
   const handleStartGame = () => {
-    const maxUndercovers = 5;
     const numUndercoverSchema = z
       .number()
-      .min(1, { message: "Undercovers: Must be at least 1" })
-      .max(maxUndercovers, {
-        message: `Undercovers: Must be at most ${maxUndercovers}`,
+      .int({ message: "Number of undercover: must be an integer" })
+      .min(1, { message: "Number of undercover: min 1" })
+      .max(maxUndercover, {
+        message: `Number of undercover: max ${maxUndercover}`,
       });
     const wordSchema = z
       .string()

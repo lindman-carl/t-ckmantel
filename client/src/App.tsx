@@ -267,6 +267,7 @@ const App = () => {
       )}
       <GameDrawer
         open={drawerIsOpen}
+        numPlayers={Object.keys(game?.players || {}).length}
         onClose={() => setDrawerIsOpen(false)}
         onStartGame={handleStartGame}
       />
