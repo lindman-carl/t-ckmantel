@@ -6,9 +6,10 @@ import Button from "./Button";
 type MenuProps = {
   onJoinGame: (gameId: string, playerName: string) => void;
   onCreateGame: (gameId: string, hostName: string) => void;
+  onHowTo: () => void;
 };
 
-const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
+const Menu = ({ onJoinGame, onCreateGame, onHowTo }: MenuProps) => {
   const [menuState, setMenuState] = useState<"main" | "join" | "create">(
     "main"
   );
@@ -62,19 +63,22 @@ const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
   if (menuState === "main") {
     return (
       <div className="w-screen px-4 sm:w-96">
-        <div className="flex w-full flex-col items-stretch justify-center gap-y-2 rounded-md bg-rose-700 p-4 shadow-inner">
+        <div className="flex w-full flex-col items-stretch justify-center gap-y-4 rounded-md bg-rose-700 p-4 py-8 shadow-inner">
           <div className="flex flex-col items-center justify-center gap-y-4">
             <Button
               onClick={() => {
                 setMenuState("join");
                 setGameId("");
               }}
-              label="Join Game"
+              label="Join game"
             />
             <Button
               onClick={() => setMenuState("create")}
-              label="Create Game"
+              label="Create game"
             />
+            <div className="flex w-full flex-row items-center justify-center">
+              <button onClick={onHowTo}>How to play?</button>
+            </div>
           </div>
         </div>
       </div>
@@ -83,7 +87,7 @@ const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
 
   return (
     <div className="w-screen px-4 sm:w-96">
-      <div className="flex w-full flex-col items-stretch justify-center gap-y-2 rounded-md bg-rose-700 p-4 shadow-inner">
+      <div className="flex w-full flex-col items-stretch justify-center gap-y-2 rounded-md bg-rose-700 p-4 py-8 shadow-inner">
         <h2 className="text-center text-2xl font-semibold text-white underline decoration-rose-900 decoration-2 underline-offset-2 drop-shadow">
           {menuState === "join" ? "Join game" : "Host game"}
         </h2>
@@ -104,9 +108,9 @@ const Menu = ({ onJoinGame, onCreateGame }: MenuProps) => {
         {errorMessage && <div className="w-full text-sm">{errorMessage}</div>}
         <div className="mx-auto mt-4">
           {menuState === "join" ? (
-            <Button onClick={handleJoinGame} label="Join Game" />
+            <Button onClick={handleJoinGame} label="Join game" />
           ) : (
-            <Button onClick={handleCreateGame} label="Create Game" />
+            <Button onClick={handleCreateGame} label="Create game" />
           )}
         </div>
       </div>

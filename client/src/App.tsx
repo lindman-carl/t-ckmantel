@@ -15,6 +15,7 @@ import { getClientId } from "./utils";
 import { drawChart } from "./chart";
 import GameInfo from "./components/GameInfo";
 import GameStats from "./components/GameStats";
+import HowToModal from "./components/HowToModal";
 
 const CLIENT_ID = getClientId();
 
@@ -41,6 +42,7 @@ const App = () => {
   const [playerWord, setPlayerWord] = useState<string>("");
   const [hasVoted, setHasVoted] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showHowToModal, setShowHowToModal] = useState(false);
   const [drawerIsOpen, setDrawerIsOpen] = useState(false);
   const [currentGameInfoPage, setCurrentGameInfoPage] = useState<
     "players" | "stats"
@@ -203,8 +205,7 @@ const App = () => {
             <div className="flex flex-col items-center gap-y-4">
               <GameHeader
                 game={game}
-                isHost={isHost}
-                onClickSettings={() => console.log("todo: implement settings")}
+                onClickHowTo={() => setShowHowToModal(true)}
               >
                 {isHost && (
                   <div className="mt-2">
@@ -251,7 +252,11 @@ const App = () => {
               </GameInfo>
             </div>
           ) : (
-            <Menu onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} />
+            <Menu
+              onCreateGame={handleCreateGame}
+              onJoinGame={handleJoinGame}
+              onHowTo={() => setShowHowToModal(true)}
+            />
           )
         ) : (
           <Spinner />
@@ -264,6 +269,9 @@ const App = () => {
           message={game?.message ? game.message : "lol on you"}
           onClose={() => setShowModal(false)}
         />
+      )}
+      {showHowToModal && (
+        <HowToModal onClose={() => setShowHowToModal(false)} />
       )}
       <GameDrawer
         open={drawerIsOpen}
