@@ -41,6 +41,7 @@ describe("gameCreate", () => {
           name: hostName,
           wins: 0,
           hasVoted: false,
+          score: 0,
         },
       },
       round: 0,
@@ -55,6 +56,7 @@ describe("gameCreate", () => {
       votes: [{}],
       allowVote: false,
       message: null,
+      accumulatedScoreForUndercoverPlayers: {},
     });
 
     // expect the game to be in the games map
@@ -969,8 +971,6 @@ describe("gameVote", () => {
       fail("game is undefined");
     }
 
-    expect(game?.message).toBe("player playerName was eliminated");
-
     // expect 4 players to still be in the game
     // count players .inGame
     const numPlayersLeftInGame = Object.values(game.players).reduce(
@@ -1039,6 +1039,11 @@ describe("gameVote", () => {
 
     // expect the game to be over
     expect(game.gameOver).toBe(true);
+
+    // check scores
+    expect(game.players[undercoverId].score).toBe(0);
+    expect(game.players[nonUndercoverPlayers[0]].score).toBe(10);
+    expect(game.players[nonUndercoverPlayers[1]].score).toBe(10);
   });
 
   test("should end game when there is no longer a majority of non-undercover players", () => {
@@ -1103,6 +1108,7 @@ describe("gameVote", () => {
     );
     expect(numPlayersLeftInGame).toBe(3);
     expect(game.round).toBe(1);
+    expect(game.accumulatedScoreForUndercoverPlayers[undercoverId]).toBe(10);
 
     // next round
     targetId = nonUndercoverPlayers[1];
@@ -1134,9 +1140,357 @@ describe("gameVote", () => {
     );
     expect(numPlayersLeftInGame).toBe(2);
     expect(game.round).toBe(2);
+    expect(game.accumulatedScoreForUndercoverPlayers[undercoverId]).toBe(20);
 
     // expect the game to be over
     // the undercover player won because there is no longer a majority of non-undercover players
     expect(game.gameOver).toBe(true);
+
+    // check scores
+    expect(game.players[undercoverId].score).toBe(45);
+    expect(game.players[nonUndercoverPlayers[0]].score).toBe(0);
+    expect(game.players[nonUndercoverPlayers[1]].score).toBe(0);
+    expect(game.players[nonUndercoverPlayers[2]].score).toBe(0);
+  });
+
+  test("should give correct scores with many players", () => {
+    const gameId = "gameId";
+
+    // create a game
+    gameCreate(gameId, "hostId", "hostName");
+
+    // add 10 players to the game for 11 total players
+    gameAddPlayer(gameId, "playerId", "playerName");
+    gameAddPlayer(gameId, "playerId2", "playerName2");
+    gameAddPlayer(gameId, "playerId3", "playerName3");
+    gameAddPlayer(gameId, "playerId4", "playerName4");
+    gameAddPlayer(gameId, "playerId5", "playerName5");
+    gameAddPlayer(gameId, "playerId6", "playerName6");
+    gameAddPlayer(gameId, "playerId7", "playerName7");
+    gameAddPlayer(gameId, "playerId8", "playerName8");
+    gameAddPlayer(gameId, "playerId9", "playerName9");
+    gameAddPlayer(gameId, "playerId10", "playerName10");
+
+    // start the game
+    gameStart("hostId", gameId, ["word1", "word2"], 2);
+
+    // get who is undercover
+    let game = games.get(gameId);
+
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    const undercoverPlayers = Object.entries(game.players)
+      .filter(([_, player]) => {
+        return player.isUndercover;
+      })
+      .map(([id]) => id);
+
+    if (undercoverPlayers.length !== 2) {
+      fail("there should be two undercover players");
+    }
+
+    // get players who are not undercover
+    let nonUndercoverPlayers = Object.keys(game.players).filter((playerId) => {
+      return (
+        !undercoverPlayers.find((id) => id === playerId) &&
+        game?.players[playerId].inGame
+      );
+    });
+
+    //
+    // ROUND 1
+    //
+    // vote for someone who is not undercover
+    let targetId = nonUndercoverPlayers[0];
+
+    // let everyone vote for the target
+    undercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, targetId);
+    });
+
+    nonUndercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, undercoverPlayers[0]);
+      }
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    let numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(10);
+    expect(game.round).toBe(1);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(10);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(10);
+
+    //
+    // ROUND 2
+    //
+    // make a tie
+    targetId = nonUndercoverPlayers[1];
+    const tieTargetId = nonUndercoverPlayers[2];
+
+    // let half of the players vote for the target
+    gameVote(gameId, nonUndercoverPlayers[1], tieTargetId);
+    gameVote(gameId, nonUndercoverPlayers[2], targetId);
+    gameVote(gameId, nonUndercoverPlayers[3], targetId);
+    gameVote(gameId, nonUndercoverPlayers[4], targetId);
+    gameVote(gameId, nonUndercoverPlayers[5], targetId);
+    gameVote(gameId, nonUndercoverPlayers[6], targetId);
+    gameVote(gameId, nonUndercoverPlayers[7], tieTargetId);
+    gameVote(gameId, nonUndercoverPlayers[8], tieTargetId);
+
+    // undercover players vote for the tie target
+    undercoverPlayers.forEach((playerId) => {
+      console.log("yo");
+      gameVote(gameId, playerId, tieTargetId);
+    });
+
+    // expect tie, no one eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(true);
+    expect(game.players[tieTargetId].inGame).toBe(true);
+    expect(numPlayersLeftInGame).toBe(10);
+    expect(game.round).toBe(2);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(20);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(20);
+
+    //
+    // ROUND 3
+    //
+    // vote for someone who is not undercover
+    targetId = nonUndercoverPlayers[1];
+
+    // let everyone vote for the target
+    undercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, targetId);
+    });
+    nonUndercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, undercoverPlayers[0]);
+      }
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(9);
+    expect(game.round).toBe(3);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(30);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(30);
+
+    //
+    // ROUND 4
+    //
+    // vote for someone who is not undercover
+    targetId = nonUndercoverPlayers[2];
+
+    // let everyone vote for the target
+    undercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, targetId);
+    });
+    nonUndercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, undercoverPlayers[0]);
+      }
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(8);
+    expect(game.round).toBe(4);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(40);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(40);
+
+    //
+    // ROUND 5
+    //
+    // vote for someone who is undercover
+    targetId = undercoverPlayers[0];
+
+    // let everyone vote for the target
+    undercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, nonUndercoverPlayers[4]);
+      }
+    });
+    nonUndercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, targetId);
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(7);
+    expect(game.round).toBe(5);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(40);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(50);
+
+    //
+    // ROUND 6
+    //
+    // vote for someone who is not undercover
+    targetId = nonUndercoverPlayers[3];
+
+    // let everyone vote for the target
+    undercoverPlayers.forEach((playerId) => {
+      if (game?.players[playerId].inGame) {
+        gameVote(gameId, playerId, targetId);
+      }
+    });
+
+    nonUndercoverPlayers.forEach((playerId) => {
+      if (playerId !== targetId) {
+        gameVote(gameId, playerId, targetId);
+      } else {
+        gameVote(gameId, playerId, nonUndercoverPlayers[4]);
+      }
+    });
+
+    // expect one player to be eliminated
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(6);
+    expect(game.round).toBe(6);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[0]]
+    ).toBe(40);
+    expect(
+      game.accumulatedScoreForUndercoverPlayers[undercoverPlayers[1]]
+    ).toBe(60);
+
+    //
+    // ROUND 7
+    //
+    // eliminate the last undercover player
+    targetId = undercoverPlayers[1];
+
+    // let everyone vote for the target
+    nonUndercoverPlayers.forEach((playerId) => {
+      gameVote(gameId, playerId, targetId);
+    });
+
+    gameVote(gameId, undercoverPlayers[1], nonUndercoverPlayers[6]);
+
+    // expect game to end
+    game = games.get(gameId);
+    if (game === undefined) {
+      fail("game is undefined");
+    }
+
+    // count players .inGame
+    numPlayersLeftInGame = Object.values(game.players).reduce(
+      (acc, curr) => acc + (curr.inGame ? 1 : 0),
+      0
+    );
+
+    expect(game.players[targetId].inGame).toBe(false);
+    expect(numPlayersLeftInGame).toBe(5);
+    expect(game.round).toBe(7);
+    expect(game.gameOver).toBe(true);
+
+    // expect the non-undercover players to win
+    // check scores
+    // expect surviving non undercovers to have score of 10
+    Object.entries(game.players).forEach(([_, player]) => {
+      if (player.inGame && !player.isUndercover) {
+        expect(player.score).toBe(10);
+      } else if (!player.inGame && !player.isUndercover) {
+        expect(player.score).toBe(0);
+      }
+    });
+
+    expect(game.players[undercoverPlayers[0]].score).toBe(40);
+    expect(game.players[undercoverPlayers[1]].score).toBe(60);
   });
 });

@@ -17,6 +17,7 @@ export type Game = {
   allowVote: boolean;
   message: string | null;
   chordData?: { source: string; target: string; value: number }[];
+  accumulatedScoreForUndercoverPlayers: { [id: string]: number };
 };
 
 export type Player = {

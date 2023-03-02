@@ -85,6 +85,7 @@ export const gameCreate = (
         isHost: true,
         name: trimmedHostName,
         wins: 0,
+        score: 0,
         hasVoted: false,
       },
     },
@@ -100,6 +101,7 @@ export const gameCreate = (
     votes: [{}],
     allowVote: false,
     message: null,
+    accumulatedScoreForUndercoverPlayers: {},
   };
 
   games.set(trimmedGameId, game);
@@ -160,6 +162,7 @@ export const gameAddPlayer = (
       inGame: false,
       name: trimmedPlayerName,
       wins: 0,
+      score: 0,
       hasVoted: false,
     },
   };
@@ -176,7 +179,6 @@ export const gameAddPlayer = (
   playersInGame.set(playerId, gameId);
 
   log("game", `player ${playerId} added to game ${gameId}`);
-  logAllPlayers();
 
   return updatedGame;
 };
@@ -395,6 +397,7 @@ export const gameStart = (
     round: 0,
     message,
     numUndercover,
+    accumulatedScoreForUndercoverPlayers: {},
   };
 
   // update games map
@@ -440,6 +443,7 @@ export const gameVote = (
   }
 
   // update votes
+  // add the vote as a key value (voter:vote target) pair to the first object in the votes array
   const currentVotesObject = game.votes[0];
   const updatedVotesObject = { ...currentVotesObject };
   updatedVotesObject[playerId] = voteForId;
@@ -447,6 +451,7 @@ export const gameVote = (
 
   // count votes
   const voteCount = Object.keys(updatedVotesObject).length;
+  console.log(voteCount);
 
   const expectedVoteCount = Object.values(game.players).reduce(
     (acc, player) => acc + (player.inGame ? 1 : 0),
@@ -461,6 +466,14 @@ export const gameVote = (
   let gameOver = false;
 
   // end round if all votes are in
+  /*
+      all players have voted
+      end round
+      count votes
+      eliminate player with most votes
+      if there is a tie, no one is eliminated
+      accumulate score for surviving undercover players
+  */
   if (voteCount === expectedVoteCount) {
     // count votes for each player
     const voteCounts = Object.values(updatedVotesObject).reduce(
@@ -475,7 +488,7 @@ export const gameVote = (
       {} as Record<string, number>
     );
 
-    // check if any player has more than anyone else
+    // check if any player has more than everyone else
     // draws are possible and will result in no one being eliminated
     let currentMax = 0;
     let currentMaxPlayerId: string | null = null;
@@ -519,8 +532,8 @@ export const gameVote = (
         )}`;
         gameOver = true;
 
-        // give wins to surviving commoners
         for (const playerId of Object.keys(updatedPlayers)) {
+          // give wins and score to surviving commoners
           if (
             !updatedPlayers[playerId].isUndercover &&
             updatedPlayers[playerId].inGame
@@ -528,6 +541,18 @@ export const gameVote = (
             updatedPlayers[playerId] = {
               ...updatedPlayers[playerId],
               wins: updatedPlayers[playerId].wins + 1,
+              score: updatedPlayers[playerId].score + 10,
+            };
+          }
+          // give accumulated score to undercovers
+          if (
+            Object.hasOwn(game.accumulatedScoreForUndercoverPlayers, playerId)
+          ) {
+            updatedPlayers[playerId] = {
+              ...updatedPlayers[playerId],
+              score:
+                updatedPlayers[playerId].score +
+                game.accumulatedScoreForUndercoverPlayers[playerId],
             };
           }
         }
@@ -542,15 +567,25 @@ export const gameVote = (
         )}`;
         gameOver = true;
 
-        // give wins to surviving undercovers
+        // give wins and score to surviving undercovers
         for (const playerId of Object.keys(updatedPlayers)) {
-          if (
-            updatedPlayers[playerId].isUndercover &&
-            updatedPlayers[playerId].inGame
-          ) {
+          if (updatedPlayers[playerId].isUndercover) {
+            // give 25 points to surviving undercover for winning
+            // also give 10 points for surviving another voting round
+            // because the accumulatation happens after this piece of code
+            let scoreIncrease = updatedPlayers[playerId].inGame ? 35 : 0;
+            // if the player already has an accumulated score, add it to the score
+            if (
+              Object.hasOwn(game.accumulatedScoreForUndercoverPlayers, playerId)
+            ) {
+              scoreIncrease +=
+                game.accumulatedScoreForUndercoverPlayers[playerId];
+            }
+
             updatedPlayers[playerId] = {
               ...updatedPlayers[playerId],
               wins: updatedPlayers[playerId].wins + 1,
+              score: updatedPlayers[playerId].score + scoreIncrease,
             };
           }
         }
@@ -558,6 +593,26 @@ export const gameVote = (
     } else {
       // if there is a tie, no one is eliminated
       message = "there was a tie, no one was eliminated";
+    }
+
+    const updatedAccumulatedScore = {
+      ...game.accumulatedScoreForUndercoverPlayers,
+    };
+    // accumulate score for each undercover player that is still in the game
+    // they get 10 points for each round they are still in the game
+    for (const playerId of Object.keys(updatedPlayers)) {
+      if (
+        updatedPlayers[playerId].isUndercover &&
+        updatedPlayers[playerId].inGame
+      ) {
+        // if the player already has an accumulated score, add 10 to it
+        if (Object.hasOwn(updatedAccumulatedScore, playerId)) {
+          updatedAccumulatedScore[playerId] =
+            updatedAccumulatedScore[playerId] + 10;
+        } else {
+          updatedAccumulatedScore[playerId] = 10;
+        }
+      }
     }
 
     // increment round
@@ -571,8 +626,11 @@ export const gameVote = (
       };
     }
 
-    // generate a new chord matrix
-    const chordData = generateChordData(updatedVotes);
+    // generate new chord data if a game is over
+    let chordData = game.chordData;
+    if (gameOver) {
+      chordData = generateChordData(updatedVotes);
+    }
 
     // new round, make new votes object in the beginning of the votes array
     updatedVotes.unshift({});
@@ -586,6 +644,7 @@ export const gameVote = (
       message,
       gameOver,
       chordData,
+      accumulatedScoreForUndercoverPlayers: updatedAccumulatedScore,
     };
 
     // update games map
