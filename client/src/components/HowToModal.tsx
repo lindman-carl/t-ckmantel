@@ -66,7 +66,7 @@ const HowToModal = ({ open, onClose }: Props) => {
           <picture>
             <source srcSet={slides[currentSlide].image} type="image/webp" />
             <img
-              className="h-48 object-scale-down"
+              className="h-48 object-scale-down sm:h-full"
               src={slides[currentSlide].imageFallback}
               alt="how-to slide image"
             />
