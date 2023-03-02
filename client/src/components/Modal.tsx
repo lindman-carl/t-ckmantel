@@ -1,21 +1,17 @@
-import { useEffect } from "react";
 import Button from "./Button";
 
 type Props = {
   heading: string;
   message: string;
+  open: boolean;
   onClose: () => void;
 };
 
-const Modal = ({ heading, message, onClose }: Props) => {
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-  }, []);
+const Modal = ({ heading, message, open, onClose }: Props) => {
+  // stop body scroll when drawer is open
+  document.body.style.overflow = open ? "hidden" : "unset";
 
-  const handleClose = () => {
-    document.body.style.overflow = "unset";
-    onClose();
-  };
+  if (!open) return null;
 
   return (
     <div className="fixed top-0 z-50 flex h-screen w-screen flex-col justify-center bg-black bg-opacity-20 shadow-2xl backdrop-blur-sm">
@@ -25,7 +21,7 @@ const Modal = ({ heading, message, onClose }: Props) => {
           {message}
         </div>
 
-        <Button onClick={handleClose} label={"Ok"} />
+        <Button onClick={onClose} label={"Ok"} />
       </div>
     </div>
   );

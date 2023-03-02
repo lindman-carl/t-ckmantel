@@ -35,18 +35,10 @@ const slides: { text: string; image: string; imageFallback: string }[] = [
   },
 ];
 
-type Props = { onClose: () => void };
+type Props = { open: boolean; onClose: () => void };
 
-const HowToModal = ({ onClose }: Props) => {
+const HowToModal = ({ open, onClose }: Props) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
 
   const handleNext = () => {
     if (currentSlide === slides.length - 1) {
@@ -64,13 +56,16 @@ const HowToModal = ({ onClose }: Props) => {
     }
   };
 
+  if (!open) return null;
+
   return (
     <div className="fixed top-0 z-50 flex h-screen w-screen flex-col justify-center bg-black bg-opacity-20 shadow-2xl backdrop-blur-sm">
-      <div className="relative mx-auto flex w-80 flex-col items-center justify-between rounded-md bg-white py-8 text-sky-900 backdrop-blur-sm md:w-96">
+      <div className="relative mx-auto my-32 flex w-80 flex-col items-center justify-between rounded-md bg-white py-8 text-sky-900 backdrop-blur-sm md:w-96">
         <div className="flex flex-col items-center justify-start px-4">
           <picture>
             <source srcSet={slides[currentSlide].image} type="image/webp" />
             <img
+              className="h-48 object-scale-down"
               src={slides[currentSlide].imageFallback}
               alt="how-to slide image"
             />

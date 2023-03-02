@@ -263,16 +263,18 @@ const App = () => {
         )}
         <SignatureFooter />
       </div>
-      {showModal && (
-        <Modal
-          heading={game?.gameOver ? "Game Over" : "Round Over"}
-          message={game?.message ? game.message : "lol on you"}
-          onClose={() => setShowModal(false)}
-        />
-      )}
-      {showHowToModal && (
-        <HowToModal onClose={() => setShowHowToModal(false)} />
-      )}
+      <Modal
+        open={showModal}
+        heading={game?.gameOver ? "Game Over" : "Round Over"}
+        message={game?.message ? game.message : "lol on you"}
+        onClose={() => setShowModal(false)}
+      />
+
+      <HowToModal
+        open={showHowToModal}
+        onClose={() => setShowHowToModal(false)}
+      />
+
       <GameDrawer
         open={drawerIsOpen}
         numPlayers={Object.keys(game?.players || {}).length}
