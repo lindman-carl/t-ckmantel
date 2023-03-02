@@ -15,7 +15,7 @@ export type Game = {
   };
   votes: { [id: string]: string }[];
   allowVote: boolean;
-  message: string | null;
+  message: string[] | null;
   chordData?: { source: string; target: string; value: number }[];
   accumulatedScoreForUndercoverPlayers: { [id: string]: number };
 };

@@ -41,8 +41,9 @@ const App = () => {
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
   const [playerWord, setPlayerWord] = useState<string>("");
   const [hasVoted, setHasVoted] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [showHowToModal, setShowHowToModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [prevMessage, setPrevMessage] = useState<(string | null)[]>([null]);
   const [drawerIsOpen, setDrawerIsOpen] = useState(false);
   const [currentGameInfoPage, setCurrentGameInfoPage] = useState<
     "players" | "stats"
@@ -126,13 +127,19 @@ const App = () => {
   useEffect(() => {
     // re draw chord chart on updated chord data
     if (!game) return;
-    console.log("yolo");
     drawChart(game);
   }, [game?.chordData, currentGameInfoPage]);
 
   useEffect(() => {
     if (game && game.message !== null) {
+      if (
+        game.message[0] === prevMessage[0] &&
+        game.message[1] === prevMessage[1]
+      )
+        return;
       setShowModal(true);
+      console.log(game.message, prevMessage);
+      setPrevMessage(game.message);
     }
   }, [game?.message]);
 
@@ -271,12 +278,13 @@ const App = () => {
         )}
         <SignatureFooter />
       </div>
-      <Modal
-        open={showModal}
-        heading={game?.gameOver ? "Game Over" : "Round Over"}
-        message={game?.message ? game.message : "lol on you"}
-        onClose={() => setShowModal(false)}
-      />
+
+      {showModal && (
+        <Modal
+          message={game?.message || null}
+          onClose={() => setShowModal(false)}
+        />
+      )}
 
       <HowToModal
         open={showHowToModal}

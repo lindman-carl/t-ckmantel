@@ -263,7 +263,7 @@ export const gameStart = (
   }
 
   // check if game is already started
-  if (game.gameStarted) {
+  if (game.gameStarted && !game.gameOver) {
     console.log("game already started");
     return null;
   }
@@ -384,7 +384,10 @@ export const gameStart = (
   playerIdsInRandomOrder = shuffleArray([...playerIds]);
   const startPlayer = playerIdsInRandomOrder[0];
 
-  const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
+  const message = [
+    "The game has started!",
+    `${game.players[startPlayer].name} goes first.`,
+  ];
 
   // update game
   const updatedGame: Game = {
@@ -509,7 +512,10 @@ export const gameVote = (
         inGame: false,
       };
       const eliminatedPlayerName = updatedPlayers[currentMaxPlayerId].name;
-      message = `player ${eliminatedPlayerName} was eliminated`;
+      message = [
+        "The round is over!",
+        `${eliminatedPlayerName} was eliminated.`,
+      ];
 
       // check if game is over
       const numCommonersInGame = Object.values(updatedPlayers).reduce(
@@ -527,9 +533,22 @@ export const gameVote = (
           .filter((player) => !player.isUndercover && player.inGame)
           .map((player) => player.name);
 
-        message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(
-          ", "
-        )}`;
+        const undercoverScoreString = Object.entries(
+          game.accumulatedScoreForUndercoverPlayers
+        )
+          .map(([playerId, score]) => {
+            return `${updatedPlayers[playerId].name} get ${score}`;
+          })
+          .join(", ");
+
+        message = [
+          `${eliminatedPlayerName} was eliminated, the commoners won!`,
+
+          `${survivingCommonersPlayerNames.join(
+            ", "
+          )} survived and are awarded 10 points!`,
+          `${undercoverScoreString} points for surviving as long as they did.`,
+        ];
         gameOver = true;
 
         for (const playerId of Object.keys(updatedPlayers)) {
@@ -562,9 +581,23 @@ export const gameVote = (
           .filter((player) => player.isUndercover && player.inGame)
           .map((player) => player.name);
 
-        message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(
-          ", "
-        )}`;
+        const undercoverScoreString = Object.entries(
+          game.accumulatedScoreForUndercoverPlayers
+        )
+          .map(([playerId, score]) => {
+            return `${updatedPlayers[playerId].name} (${score})`;
+          })
+          .join(", ");
+
+        message = [
+          `${eliminatedPlayerName} was eliminated, the undercovers won!`,
+          `${survivingUndercoverPlayerNames.join(
+            ", "
+          )} survived and are awarded 25 points.`,
+          undercoverScoreString.length > 0
+            ? `The undercover(s) also get ${undercoverScoreString} points for surviving as long as they did.`
+            : "No points for the undercovers.",
+        ];
         gameOver = true;
 
         // give wins and score to surviving undercovers
@@ -592,7 +625,10 @@ export const gameVote = (
       }
     } else {
       // if there is a tie, no one is eliminated
-      message = "there was a tie, no one was eliminated";
+      message = [
+        "The round is over!",
+        "There was a tie, no one was eliminated.",
+      ];
     }
 
     const updatedAccumulatedScore = {
