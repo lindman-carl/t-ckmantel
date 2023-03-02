@@ -1,11 +1,7 @@
 import { ReactNode } from "react";
 
-type Props = {
-  children: ReactNode;
-  currentPage: "players" | "stats";
-  setPage: (page: "players" | "stats") => void;
-};
-
+// i can not figure out for the life of me how i can use tailwind to change the color of svgs in external files
+// so here they are
 const GroupSvg = () => (
   <svg
     viewBox="0 0 1200 1200"
@@ -51,10 +47,15 @@ C207,223.747,211.253,228,216.5,228z"
   </svg>
 );
 
-const active =
-  "bg-rose-800 fill-rose-900 shadow-inner border-rose-800 border-2";
-const inactive =
-  "fill-white bg-rose-700 bg-checkered-pattern shadow border-rose-800 border-2";
+// buttons css for active and inactive state
+const active = "shadow-inner fill-rose-900 bg-rose-800";
+const inactive = "shadow fill-white bg-rose-700 bg-checkered-pattern";
+
+type Props = {
+  children: ReactNode;
+  currentPage: "players" | "stats";
+  setPage: (page: "players" | "stats") => void;
+};
 
 const GameInfo = ({ children, setPage, currentPage }: Props) => {
   return (
@@ -62,7 +63,7 @@ const GameInfo = ({ children, setPage, currentPage }: Props) => {
       <div className="flex w-full flex-col items-stretch justify-center rounded-md bg-rose-700 p-4 shadow-inner">
         <div className="mb-4 flex w-full flex-row justify-center">
           <button
-            className={`rounded-l-md ${
+            className={`rounded-l-md border-2 border-rose-800 ${
               currentPage === "players" ? active : inactive
             } py-2 px-8`}
             onClick={() => setPage("players")}
@@ -70,7 +71,7 @@ const GameInfo = ({ children, setPage, currentPage }: Props) => {
             <GroupSvg />
           </button>
           <button
-            className={`rounded-r-md ${
+            className={`rounded-r-md border-2 border-rose-800 ${
               currentPage === "stats" ? active : inactive
             } py-2 px-8`}
             onClick={() => setPage("stats")}
