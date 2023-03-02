@@ -43,6 +43,7 @@ const HowToModal = ({ open, onClose }: Props) => {
   const handleNext = () => {
     if (currentSlide === slides.length - 1) {
       onClose();
+      setCurrentSlide(0);
     } else {
       setCurrentSlide((prev) => prev + 1);
     }
