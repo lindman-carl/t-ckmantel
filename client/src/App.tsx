@@ -185,16 +185,16 @@ const App = () => {
     }
   };
 
-  const handleKickPlayer = (playerId: string) => {
-    if (!isHost) {
-      console.log("only the host can kick players");
-      return;
-    }
+  // const handleKickPlayer = (playerId: string) => {
+  //   if (!isHost) {
+  //     console.log("only the host can kick players");
+  //     return;
+  //   }
 
-    if (game) {
-      socket.emit("game-kick", game.id, playerId, CLIENT_ID);
-    }
-  };
+  //   if (game) {
+  //     socket.emit("game-kick", game.id, playerId, CLIENT_ID);
+  //   }
+  // };
 
   return (
     <>
@@ -235,7 +235,6 @@ const App = () => {
                 {currentGameInfoPage === "players" && (
                   <PlayerList
                     players={game.players}
-                    canKick={isHost && !game.gameStarted}
                     canVote={
                       game.gameStarted &&
                       !hasVoted &&
@@ -245,10 +244,19 @@ const App = () => {
                     playerId={CLIENT_ID}
                     hasStarted={game.gameStarted}
                     handleVote={handleVote}
-                    handleKick={handleKickPlayer}
                   />
                 )}
-                {currentGameInfoPage === "stats" && <GameStats />}
+                {currentGameInfoPage === "stats" && (
+                  <>
+                    {game.chordData ? (
+                      <GameStats />
+                    ) : (
+                      <div className="text-center text-sm">
+                        Statistics are generated after every game
+                      </div>
+                    )}
+                  </>
+                )}
               </GameInfo>
             </div>
           ) : (
