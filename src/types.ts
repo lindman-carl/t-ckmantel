@@ -25,6 +25,7 @@ export type Player = {
   isHost?: boolean;
   name: string;
   wins: number;
+  score: number;
   hasVoted: boolean;
 };
 
