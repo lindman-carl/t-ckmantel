@@ -65,6 +65,7 @@ export const gameCreate = (gameId, hostId, hostName) => {
                 isHost: true,
                 name: trimmedHostName,
                 wins: 0,
+                score: 0,
                 hasVoted: false,
             },
         },
@@ -80,6 +81,7 @@ export const gameCreate = (gameId, hostId, hostName) => {
         votes: [{}],
         allowVote: false,
         message: null,
+        accumulatedScoreForUndercoverPlayers: {},
     };
     games.set(trimmedGameId, game);
     // add player to playersInGame map
@@ -128,6 +130,7 @@ export const gameAddPlayer = (gameId, playerId, playerName) => {
             inGame: false,
             name: trimmedPlayerName,
             wins: 0,
+            score: 0,
             hasVoted: false,
         },
     };
@@ -140,7 +143,6 @@ export const gameAddPlayer = (gameId, playerId, playerName) => {
     // add player to playersInGame map
     playersInGame.set(playerId, gameId);
     log("game", `player ${playerId} added to game ${gameId}`);
-    logAllPlayers();
     return updatedGame;
 };
 export const gameRemovePlayer = (gameId, playerId) => {
@@ -197,7 +199,7 @@ export const gameStart = (startedBy, gameId, words, numUndercover) => {
         return null;
     }
     // check if game is already started
-    if (game.gameStarted) {
+    if (game.gameStarted && !game.gameOver) {
         console.log("game already started");
         return null;
     }
@@ -309,7 +311,10 @@ export const gameStart = (startedBy, gameId, words, numUndercover) => {
     // rerandomize player order
     playerIdsInRandomOrder = shuffleArray([...playerIds]);
     const startPlayer = playerIdsInRandomOrder[0];
-    const message = `The game has started! ${game.players[startPlayer].name} goes first.`;
+    const message = [
+        "The game has started!",
+        `${game.players[startPlayer].name} goes first.`,
+    ];
     // update game
     const updatedGame = {
         ...game,
@@ -321,6 +326,7 @@ export const gameStart = (startedBy, gameId, words, numUndercover) => {
         round: 0,
         message,
         numUndercover,
+        accumulatedScoreForUndercoverPlayers: {},
     };
     // update games map
     games.set(gameId, updatedGame);
@@ -354,12 +360,14 @@ export const gameVote = (gameId, playerId, voteForId) => {
         return null;
     }
     // update votes
+    // add the vote as a key value (voter:vote target) pair to the first object in the votes array
     const currentVotesObject = game.votes[0];
     const updatedVotesObject = { ...currentVotesObject };
     updatedVotesObject[playerId] = voteForId;
     const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
     // count votes
     const voteCount = Object.keys(updatedVotesObject).length;
+    console.log(voteCount);
     const expectedVoteCount = Object.values(game.players).reduce((acc, player) => acc + (player.inGame ? 1 : 0), 0);
     const updatedPlayers = {
         ...game.players,
@@ -368,6 +376,14 @@ export const gameVote = (gameId, playerId, voteForId) => {
     let message = null;
     let gameOver = false;
     // end round if all votes are in
+    /*
+        all players have voted
+        end round
+        count votes
+        eliminate player with most votes
+        if there is a tie, no one is eliminated
+        accumulate score for surviving undercover players
+    */
     if (voteCount === expectedVoteCount) {
         // count votes for each player
         const voteCounts = Object.values(updatedVotesObject).reduce((acc, voteForId) => {
@@ -379,7 +395,7 @@ export const gameVote = (gameId, playerId, voteForId) => {
             }
             return acc;
         }, {});
-        // check if any player has more than anyone else
+        // check if any player has more than everyone else
         // draws are possible and will result in no one being eliminated
         let currentMax = 0;
         let currentMaxPlayerId = null;
@@ -400,7 +416,10 @@ export const gameVote = (gameId, playerId, voteForId) => {
                 inGame: false,
             };
             const eliminatedPlayerName = updatedPlayers[currentMaxPlayerId].name;
-            message = `player ${eliminatedPlayerName} was eliminated`;
+            message = [
+                "The round is over!",
+                `${eliminatedPlayerName} was eliminated.`,
+            ];
             // check if game is over
             const numCommonersInGame = Object.values(updatedPlayers).reduce((acc, player) => acc + (!player.isUndercover && player.inGame ? 1 : 0), 0);
             const numUndercoversInGame = Object.values(updatedPlayers).reduce((acc, player) => acc + (player.isUndercover && player.inGame ? 1 : 0), 0);
@@ -410,15 +429,33 @@ export const gameVote = (gameId, playerId, voteForId) => {
                 const survivingCommonersPlayerNames = Object.values(updatedPlayers)
                     .filter((player) => !player.isUndercover && player.inGame)
                     .map((player) => player.name);
-                message = `Player ${eliminatedPlayerName} was eliminated! The commoners won! Survivors: ${survivingCommonersPlayerNames.join(", ")}`;
+                const undercoverScoreString = Object.entries(game.accumulatedScoreForUndercoverPlayers)
+                    .map(([playerId, score]) => {
+                    return `${updatedPlayers[playerId].name} get ${score}`;
+                })
+                    .join(", ");
+                message = [
+                    `${eliminatedPlayerName} was eliminated, the commoners won!`,
+                    `${survivingCommonersPlayerNames.join(", ")} survived and are awarded 10 points!`,
+                    `${undercoverScoreString} points for surviving as long as they did.`,
+                ];
                 gameOver = true;
-                // give wins to surviving commoners
                 for (const playerId of Object.keys(updatedPlayers)) {
+                    // give wins and score to surviving commoners
                     if (!updatedPlayers[playerId].isUndercover &&
                         updatedPlayers[playerId].inGame) {
                         updatedPlayers[playerId] = {
                             ...updatedPlayers[playerId],
                             wins: updatedPlayers[playerId].wins + 1,
+                            score: updatedPlayers[playerId].score + 10,
+                        };
+                    }
+                    // give accumulated score to undercovers
+                    if (Object.hasOwn(game.accumulatedScoreForUndercoverPlayers, playerId)) {
+                        updatedPlayers[playerId] = {
+                            ...updatedPlayers[playerId],
+                            score: updatedPlayers[playerId].score +
+                                game.accumulatedScoreForUndercoverPlayers[playerId],
                         };
                     }
                 }
@@ -428,15 +465,35 @@ export const gameVote = (gameId, playerId, voteForId) => {
                 const survivingUndercoverPlayerNames = Object.values(updatedPlayers)
                     .filter((player) => player.isUndercover && player.inGame)
                     .map((player) => player.name);
-                message = `Player ${eliminatedPlayerName} was eliminated! The undercovers won! Survivors: ${survivingUndercoverPlayerNames.join(", ")}`;
+                const undercoverScoreString = Object.entries(game.accumulatedScoreForUndercoverPlayers)
+                    .map(([playerId, score]) => {
+                    return `${updatedPlayers[playerId].name} (${score})`;
+                })
+                    .join(", ");
+                message = [
+                    `${eliminatedPlayerName} was eliminated, the undercovers won!`,
+                    `${survivingUndercoverPlayerNames.join(", ")} survived and are awarded 25 points.`,
+                    undercoverScoreString.length > 0
+                        ? `The undercover(s) also get ${undercoverScoreString} points for surviving as long as they did.`
+                        : "No points for the undercovers.",
+                ];
                 gameOver = true;
-                // give wins to surviving undercovers
+                // give wins and score to surviving undercovers
                 for (const playerId of Object.keys(updatedPlayers)) {
-                    if (updatedPlayers[playerId].isUndercover &&
-                        updatedPlayers[playerId].inGame) {
+                    if (updatedPlayers[playerId].isUndercover) {
+                        // give 25 points to surviving undercover for winning
+                        // also give 10 points for surviving another voting round
+                        // because the accumulatation happens after this piece of code
+                        let scoreIncrease = updatedPlayers[playerId].inGame ? 35 : 0;
+                        // if the player already has an accumulated score, add it to the score
+                        if (Object.hasOwn(game.accumulatedScoreForUndercoverPlayers, playerId)) {
+                            scoreIncrease +=
+                                game.accumulatedScoreForUndercoverPlayers[playerId];
+                        }
                         updatedPlayers[playerId] = {
                             ...updatedPlayers[playerId],
                             wins: updatedPlayers[playerId].wins + 1,
+                            score: updatedPlayers[playerId].score + scoreIncrease,
                         };
                     }
                 }
@@ -444,7 +501,28 @@ export const gameVote = (gameId, playerId, voteForId) => {
         }
         else {
             // if there is a tie, no one is eliminated
-            message = "there was a tie, no one was eliminated";
+            message = [
+                "The round is over!",
+                "There was a tie, no one was eliminated.",
+            ];
+        }
+        const updatedAccumulatedScore = {
+            ...game.accumulatedScoreForUndercoverPlayers,
+        };
+        // accumulate score for each undercover player that is still in the game
+        // they get 10 points for each round they are still in the game
+        for (const playerId of Object.keys(updatedPlayers)) {
+            if (updatedPlayers[playerId].isUndercover &&
+                updatedPlayers[playerId].inGame) {
+                // if the player already has an accumulated score, add 10 to it
+                if (Object.hasOwn(updatedAccumulatedScore, playerId)) {
+                    updatedAccumulatedScore[playerId] =
+                        updatedAccumulatedScore[playerId] + 10;
+                }
+                else {
+                    updatedAccumulatedScore[playerId] = 10;
+                }
+            }
         }
         // increment round
         const round = game.round + 1;
@@ -455,8 +533,11 @@ export const gameVote = (gameId, playerId, voteForId) => {
                 hasVoted: false,
             };
         }
-        // generate a new chord matrix
-        const chordData = generateChordData(updatedVotes);
+        // generate new chord data if a game is over
+        let chordData = game.chordData;
+        if (gameOver) {
+            chordData = generateChordData(updatedVotes);
+        }
         // new round, make new votes object in the beginning of the votes array
         updatedVotes.unshift({});
         // update game
@@ -468,6 +549,7 @@ export const gameVote = (gameId, playerId, voteForId) => {
             message,
             gameOver,
             chordData,
+            accumulatedScoreForUndercoverPlayers: updatedAccumulatedScore,
         };
         // update games map
         games.set(gameId, updatedGame);
