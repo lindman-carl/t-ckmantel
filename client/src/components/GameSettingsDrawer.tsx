@@ -151,6 +151,16 @@ function GameModeInput({
   );
 }
 
+function SettingsSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-full px-4">
+      <div className="flex w-full flex-col rounded-md bg-slate-800 p-4 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 type CustomWordsInputProps = {
   firstWord: string;
   secondWord: string;
@@ -165,28 +175,26 @@ function CustomWordsInput({
   handleChangeSecondWord,
 }: CustomWordsInputProps) {
   return (
-    <div className="w-full px-4">
-      <div className="flex w-full flex-col rounded-md bg-slate-800 p-4 shadow-inner">
-        <h3 className="mb-2 text-center text-xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
-          Custom words
-        </h3>
-        <div className="flex flex-col gap-y-2">
-          <WordInput
-            placeholder="first word"
-            value={firstWord}
-            onChange={handleChangeFirstWord}
-          />
-          <WordInput
-            placeholder="second word"
-            value={secondWord}
-            onChange={handleChangeSecondWord}
-          />
-          <span className="mt-1 px-2 text-center text-sm font-light">
-            Which word is undercover is randomly chosen
-          </span>
-        </div>
+    <SettingsSection>
+      <h3 className="mb-2 text-center text-xl font-semibold text-white underline decoration-slate-900 decoration-2 underline-offset-2 drop-shadow">
+        Custom words
+      </h3>
+      <div className="flex flex-col gap-y-2">
+        <WordInput
+          placeholder="first word"
+          value={firstWord}
+          onChange={handleChangeFirstWord}
+        />
+        <WordInput
+          placeholder="second word"
+          value={secondWord}
+          onChange={handleChangeSecondWord}
+        />
+        <span className="mt-1 px-2 text-center text-sm font-light">
+          Which word is undercover is randomly chosen
+        </span>
       </div>
-    </div>
+    </SettingsSection>
   );
 }
 
@@ -204,34 +212,32 @@ function NumbersInput({
   handleChangeNumBlanks,
 }: NumbersInputProps) {
   return (
-    <div className="w-full px-4">
-      <div className="flex w-full flex-col rounded-md bg-slate-800 p-4 shadow-inner">
-        <div className="grid-row-1 grid grid-cols-2 gap-x-2">
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold">Undercovers</label>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={numUndercover}
-              onChange={handleChangeNumUndercover}
-              className="rounded-md px-4 py-2 text-sky-900"
-            />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold">Blanks</label>
-            <input
-              type="number"
-              min="0"
-              max="5"
-              value={numBlanks}
-              onChange={handleChangeNumBlanks}
-              className="rounded-md px-4 py-2 text-sky-900"
-            />
-          </div>
+    <SettingsSection>
+      <div className="grid-row-1 grid grid-cols-2 gap-x-2">
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold">Undercovers</label>
+          <input
+            type="number"
+            min="1"
+            max="5"
+            value={numUndercover}
+            onChange={handleChangeNumUndercover}
+            className="rounded-md px-4 py-2 text-sky-900"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold">Blanks</label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            value={numBlanks}
+            onChange={handleChangeNumBlanks}
+            className="rounded-md px-4 py-2 text-sky-900"
+          />
         </div>
       </div>
-    </div>
+    </SettingsSection>
   );
 }
 
