@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 // local imports
 import useMenuInput from "../hooks/useMenuInput";
@@ -40,7 +40,7 @@ const Menu = ({ onJoinGame, onCreateGame, onHowTo }: MenuProps) => {
     }
   };
 
-  const getHeader = useCallback(() => {
+  const getHeader = () => {
     switch (menuState) {
       case "main":
         return "Welcome to the game!";
@@ -49,7 +49,7 @@ const Menu = ({ onJoinGame, onCreateGame, onHowTo }: MenuProps) => {
       case "create":
         return "Create game";
     }
-  }, [menuState]);
+  };
 
   // render main menu
   // the main menu has two buttons: join game and create game
