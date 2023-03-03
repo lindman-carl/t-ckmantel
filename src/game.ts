@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  countPlayersInGame,
+  countCommonersInGame,
+  countUndercoversInGame,
+  countVotes,
+  getPlayerWithMostVotes,
+} from "./gameUtils.js";
 
 import { Game } from "./types.js";
 import {
@@ -412,8 +419,8 @@ export const gameStart = (
 
 export const gameVote = (
   gameId: string,
-  playerId: string,
-  voteForId: string
+  voterId: string,
+  targetId: string
 ): { updatedGame: Game; newRound: boolean } | null => {
   // handles user voting for a player
   // returns updated game and whether a new round should start
@@ -421,55 +428,55 @@ export const gameVote = (
   // if the round is over, the votes are counted and a player is eliminated if they have more votes than all other players
 
   // check for voting for self
-  if (playerId === voteForId) {
-    console.log("cannot vote for self");
+  if (voterId === targetId) {
+    log("game-vote", `cannot vote for self: ${voterId} voted ${targetId}`);
     return null;
   }
 
   // get game
   const game = games.get(gameId);
   if (!game) {
-    console.log("could not find game");
+    log("game-vote", `game not found: ${gameId}`);
     return null;
   }
 
-  // check that the vote target is in the same game
-  if (!Object.hasOwn(game.players, voteForId)) {
-    console.log("vote target not in game");
+  // check that the target is in the same game
+  if (!Object.hasOwn(game.players, targetId)) {
+    log("game-vote", `vote target is not in the same game ${targetId}`);
     return null;
   }
 
   // check that the target is not eliminated
-  if (!game.players[voteForId].inGame) {
-    console.log("vote target is already eliminated");
+  if (!game.players[targetId].inGame) {
+    log("game-vote", `vote target is not in game: ${targetId}`);
     return null;
   }
 
   // update votes
-  // add the vote as a key value (voter:vote target) pair to the first object in the votes array
-  const currentVotesObject = game.votes[0];
-  const updatedVotesObject = { ...currentVotesObject };
-  updatedVotesObject[playerId] = voteForId;
-  const updatedVotes = [updatedVotesObject, ...game.votes.slice(1)];
+  // add the vote as a key value (voter:target) pair to the first object in the votes array
+  const currentRoundVotes = { ...game.votes[0] };
+  currentRoundVotes[voterId] = targetId;
 
-  // count votes
-  const voteCount = Object.keys(updatedVotesObject).length;
-  console.log(voteCount);
+  // create updated votes array
+  const updatedVotes = [currentRoundVotes, ...game.votes.slice(1)];
 
-  const expectedVoteCount = Object.values(game.players).reduce(
-    (acc, player) => acc + (player.inGame ? 1 : 0),
-    0
-  );
+  // get number of votes cast, and max number of votes possible for this round
+  const numVotes = Object.keys(currentRoundVotes).length;
+  const numPlayersInGame = countPlayersInGame(game.players);
 
+  // set player hasVoted to true
   const updatedPlayers = {
     ...game.players,
-    [playerId]: { ...game.players[playerId], hasVoted: true },
+    [voterId]: { ...game.players[voterId], hasVoted: true },
   };
+
+  // set default values for message and gameOver
   let message = null;
   let gameOver = false;
 
-  // end round if all votes are in
-  /*
+  if (numVotes === numPlayersInGame) {
+    // end round if all votes are in
+    /*
       all players have voted
       end round
       count votes
@@ -477,58 +484,34 @@ export const gameVote = (
       if there is a tie, no one is eliminated
       accumulate score for surviving undercover players
   */
-  if (voteCount === expectedVoteCount) {
+
     // count votes for each player
-    const voteCounts = Object.values(updatedVotesObject).reduce(
-      (acc, voteForId) => {
-        if (acc[voteForId]) {
-          acc[voteForId]++;
-        } else {
-          acc[voteForId] = 1;
-        }
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // and get the player with the most votes
+    const voteCounts = countVotes(currentRoundVotes);
+    const playerIdWithMostVotes = getPlayerWithMostVotes(voteCounts);
 
-    // check if any player has more than everyone else
-    // draws are possible and will result in no one being eliminated
-    let currentMax = 0;
-    let currentMaxPlayerId: string | null = null;
-    for (const [playerId, voteCount] of Object.entries(voteCounts)) {
-      if (voteCount > currentMax) {
-        currentMax = voteCount;
-        currentMaxPlayerId = playerId;
-      } else if (voteCount === currentMax) {
-        // if there is a tie, no one is eliminated
-        currentMaxPlayerId = null;
-      }
-    }
-
-    // if there is a player with the most votes, eliminate them
-    if (currentMaxPlayerId !== null) {
-      updatedPlayers[currentMaxPlayerId] = {
-        ...updatedPlayers[currentMaxPlayerId],
+    if (playerIdWithMostVotes !== null) {
+      // if there is a player with the most votes, eliminate them
+      updatedPlayers[playerIdWithMostVotes] = {
+        ...updatedPlayers[playerIdWithMostVotes],
         inGame: false,
       };
-      const eliminatedPlayerName = updatedPlayers[currentMaxPlayerId].name;
+
+      // make message
+      const eliminatedPlayerName = updatedPlayers[playerIdWithMostVotes].name;
       message = [
         "The round is over!",
         `${eliminatedPlayerName} was eliminated.`,
       ];
 
       // check if game is over
-      const numCommonersInGame = Object.values(updatedPlayers).reduce(
-        (acc, player) => acc + (!player.isUndercover && player.inGame ? 1 : 0),
-        0
-      );
-      const numUndercoversInGame = Object.values(updatedPlayers).reduce(
-        (acc, player) => acc + (player.isUndercover && player.inGame ? 1 : 0),
-        0
-      );
+      const numCommonersInGame = countCommonersInGame(updatedPlayers);
+      const numUndercoversInGame = countUndercoversInGame(updatedPlayers);
+
       if (numUndercoversInGame === 0) {
         // if there are no undercover players left, the commoners win
-        // get ids of commoners players left
+
+        // make message for commoners win
         const survivingCommonersPlayerNames = Object.values(updatedPlayers)
           .filter((player) => !player.isUndercover && player.inGame)
           .map((player) => player.name);
@@ -549,8 +532,11 @@ export const gameVote = (
           )} survived and are awarded 10 points!`,
           `${undercoverScoreString} points for surviving as long as they did.`,
         ];
+
+        // set gameOver to true
         gameOver = true;
 
+        // update score
         for (const playerId of Object.keys(updatedPlayers)) {
           // give wins and score to surviving commoners
           if (
@@ -577,6 +563,8 @@ export const gameVote = (
         }
       } else if (numCommonersInGame <= numUndercoversInGame) {
         // if there are as many or fewer commoners than undercover players left, the undercover win
+
+        // make message for undercover win
         const survivingUndercoverPlayerNames = Object.values(updatedPlayers)
           .filter((player) => player.isUndercover && player.inGame)
           .map((player) => player.name);
@@ -598,10 +586,13 @@ export const gameVote = (
             ? `The undercover(s) also get ${undercoverScoreString} points for surviving as long as they did.`
             : "No points for the undercovers.",
         ];
+
+        // set gameOver to true
         gameOver = true;
 
-        // give wins and score to surviving undercovers
+        // update score
         for (const playerId of Object.keys(updatedPlayers)) {
+          // give wins and score to surviving undercovers
           if (updatedPlayers[playerId].isUndercover) {
             // give 25 points to surviving undercover for winning
             // also give 10 points for surviving another voting round
@@ -631,11 +622,11 @@ export const gameVote = (
       ];
     }
 
+    // accumulate score for each undercover player that is still in the game
+    // they get 10 points for each round they are still in the game
     const updatedAccumulatedScore = {
       ...game.accumulatedScoreForUndercoverPlayers,
     };
-    // accumulate score for each undercover player that is still in the game
-    // they get 10 points for each round they are still in the game
     for (const playerId of Object.keys(updatedPlayers)) {
       if (
         updatedPlayers[playerId].isUndercover &&
