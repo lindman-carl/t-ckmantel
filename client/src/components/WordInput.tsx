@@ -7,7 +7,7 @@ import EyeShowSvg from "../assets/eye-show.svg";
 type WordInputProps = {
   placeholder: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 const WordInput = ({ placeholder, value, onChange }: WordInputProps) => {
@@ -18,7 +18,7 @@ const WordInput = ({ placeholder, value, onChange }: WordInputProps) => {
         type={hide ? "password" : "text"}
         placeholder={placeholder}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         className="col-span-5 col-start-1 rounded-l-md py-2 pl-4 text-sky-900 outline-none"
       />
       <div>

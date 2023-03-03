@@ -6,7 +6,7 @@ import Logo from "./components/Logo";
 import Menu from "./components/Menu";
 import Modal from "./components/Modal";
 import PlayerList from "./components/PlayerList";
-import GameDrawer from "./components/GameDrawer";
+import GameSettingsDrawer from "./components/GameSettingsDrawer";
 import SignatureFooter from "./components/SignatureFooter";
 import Spinner from "./components/Spinner";
 import WordCard from "./components/WordCard";
@@ -291,7 +291,7 @@ const App = () => {
         onClose={() => setShowHowToModal(false)}
       />
 
-      <GameDrawer
+      <GameSettingsDrawer
         open={drawerIsOpen}
         numPlayers={Object.keys(game?.players || {}).length}
         onClose={() => setDrawerIsOpen(false)}
