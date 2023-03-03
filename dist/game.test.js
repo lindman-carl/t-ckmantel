@@ -660,7 +660,10 @@ describe("gameVote", () => {
         if (game === undefined) {
             fail("game is undefined");
         }
-        expect(game?.message).toBe("there was a tie, no one was eliminated");
+        expect(game?.message).toEqual([
+            "The round is over!",
+            "There was a tie, no one was eliminated.",
+        ]);
         // expect 4 players to still be in the game
         // count players .inGame
         const numPlayersLeftInGame = Object.values(game.players).reduce((acc, curr) => acc + (curr.inGame ? 1 : 0), 0);
