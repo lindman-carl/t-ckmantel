@@ -211,7 +211,7 @@ const App = () => {
           hasJoinedGame && game ? (
             <div className="flex flex-col items-center gap-y-4">
               <GameHeader
-                game={game}
+                gameId={game.id}
                 onClickHowTo={() => setShowHowToModal(true)}
               >
                 {isHost && (
